@@ -1,8 +1,513 @@
+import { useState, useEffect, useRef } from 'react'
+import { supabase, db, type SkillMatch, type Message } from '@/lib/supabase'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { 
+  MessageCircle, 
+  Send, 
+  Search, 
+  MoreVertical,
+  Paperclip,
+  Smile,
+  Phone,
+  Video,
+  Info,
+  Archive,
+  Trash2,
+  Circle,
+  CheckCircle,
+  CheckCircle2,
+  Clock,
+  Star,
+  User,
+  Calendar,
+  MapPin
+} from 'lucide-react'
+
+interface ConversationWithMatch extends SkillMatch {
+  lastMessage?: Message
+  unreadCount?: number
+}
+
 export default function Messages() {
+  const [user, setUser] = useState<any>(null)
+  const [conversations, setConversations] = useState<ConversationWithMatch[]>([])
+  const [selectedConversation, setSelectedConversation] = useState<ConversationWithMatch | null>(null)
+  const [messages, setMessages] = useState<Message[]>([])
+  const [newMessage, setNewMessage] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [sending, setSending] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    loadUserAndConversations()
+  }, [])
+
+  useEffect(() => {
+    if (selectedConversation) {
+      loadMessages(selectedConversation.id)
+      
+      // Set up real-time subscription for messages
+      const channel = supabase
+        .channel(`messages:${selectedConversation.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'messages',
+            filter: `match_id=eq.${selectedConversation.id}`,
+          },
+          (payload) => {
+            const newMessage = payload.new as Message
+            setMessages(prev => [...prev, newMessage])
+            scrollToBottom()
+          }
+        )
+        .subscribe()
+
+      return () => {
+        channel.unsubscribe()
+      }
+    }
+  }, [selectedConversation])
+
+  useEffect(() => {
+    scrollToBottom()
+  }, [messages])
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  const loadUserAndConversations = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      setUser(user)
+      
+      if (user) {
+        const matches = await db.getSkillMatches(user.id)
+        
+        // Only show accepted matches for messaging
+        const activeMatches = matches.filter(match => match.status === 'accepted')
+        
+        // Load last message for each conversation
+        const conversationsWithMessages = await Promise.all(
+          activeMatches.map(async (match) => {
+            const matchMessages = await db.getMessages(match.id)
+            const lastMessage = matchMessages[matchMessages.length - 1]
+            const unreadCount = matchMessages.filter(
+              msg => msg.sender_id !== user.id && !msg.read_at
+            ).length
+            
+            return {
+              ...match,
+              lastMessage,
+              unreadCount
+            }
+          })
+        )
+        
+        // Sort by last message time
+        conversationsWithMessages.sort((a, b) => {
+          const aTime = a.lastMessage?.created_at || a.created_at
+          const bTime = b.lastMessage?.created_at || b.created_at
+          return new Date(bTime).getTime() - new Date(aTime).getTime()
+        })
+        
+        setConversations(conversationsWithMessages)
+        
+        // Auto-select first conversation if available
+        if (conversationsWithMessages.length > 0 && !selectedConversation) {
+          setSelectedConversation(conversationsWithMessages[0])
+        }
+      }
+    } catch (error) {
+      console.error('Error loading conversations:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const loadMessages = async (matchId: string) => {
+    try {
+      const matchMessages = await db.getMessages(matchId)
+      setMessages(matchMessages)
+      
+      // Mark messages as read
+      const unreadMessages = matchMessages.filter(
+        msg => msg.sender_id !== user?.id && !msg.read_at
+      )
+      
+      if (unreadMessages.length > 0) {
+        await Promise.all(
+          unreadMessages.map(msg =>
+            supabase
+              .from('messages')
+              .update({ read_at: new Date().toISOString() })
+              .eq('id', msg.id)
+          )
+        )
+      }
+    } catch (error) {
+      console.error('Error loading messages:', error)
+    }
+  }
+
+  const sendMessage = async () => {
+    if (!newMessage.trim() || !selectedConversation || !user) return
+    
+    setSending(true)
+    try {
+      const message = await db.sendMessage({
+        match_id: selectedConversation.id,
+        sender_id: user.id,
+        content: newMessage.trim(),
+        message_type: 'text'
+      })
+      
+      if (message) {
+        setMessages(prev => [...prev, message])
+        setNewMessage('')
+        scrollToBottom()
+        
+        // Update conversation's last message
+        setConversations(prev =>
+          prev.map(conv =>
+            conv.id === selectedConversation.id
+              ? { ...conv, lastMessage: message }
+              : conv
+          )
+        )
+      }
+    } catch (error) {
+      console.error('Error sending message:', error)
+    } finally {
+      setSending(false)
+    }
+  }
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      sendMessage()
+    }
+  }
+
+  const getPartnerInfo = (conversation: ConversationWithMatch) => {
+    if (!user) return null
+    
+    const isTeacher = conversation.teacher_id === user.id
+    return isTeacher ? conversation.learner : conversation.teacher
+  }
+
+  const formatMessageTime = (timestamp: string) => {
+    const date = new Date(timestamp)
+    const now = new Date()
+    const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60)
+    
+    if (diffInHours < 24) {
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    } else if (diffInHours < 168) { // 7 days
+      return date.toLocaleDateString([], { weekday: 'short' })
+    } else {
+      return date.toLocaleDateString([], { month: 'short', day: 'numeric' })
+    }
+  }
+
+  const filteredConversations = conversations.filter(conv => {
+    const partner = getPartnerInfo(conv)
+    const partnerName = partner?.full_name || partner?.email || ''
+    const skillName = conv.skill?.name || ''
+    
+    return (
+      partnerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      skillName.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+  })
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+      </div>
+    )
+  }
+
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-4">Messages</h1>
-      <p className="text-muted-foreground">Chat with your skill partners here.</p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30 dark:from-slate-900 dark:via-blue-900/10 dark:to-indigo-900/10">
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-slate-900 dark:text-white mb-2">
+            Messages 💬
+          </h1>
+          <p className="text-lg text-slate-600 dark:text-slate-300">
+            Chat with your skill exchange partners
+          </p>
+        </div>
+
+        <div className="grid lg:grid-cols-4 gap-8 h-[calc(100vh-200px)]">
+          {/* Conversations Sidebar */}
+          <div className="lg:col-span-1">
+            <Card className="h-full shadow-lg border-0 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center text-lg">
+                  <MessageCircle className="h-5 w-5 mr-2 text-blue-600" />
+                  Conversations
+                </CardTitle>
+                
+                {/* Search */}
+                <div className="relative">
+                  <Search className="h-4 w-4 absolute left-3 top-3 text-slate-400" />
+                  <Input
+                    placeholder="Search conversations..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </CardHeader>
+              
+              <CardContent className="p-0">
+                {filteredConversations.length > 0 ? (
+                  <div className="space-y-1">
+                    {filteredConversations.map((conversation) => {
+                      const partner = getPartnerInfo(conversation)
+                      const isSelected = selectedConversation?.id === conversation.id
+                      
+                      return (
+                        <div
+                          key={conversation.id}
+                          onClick={() => setSelectedConversation(conversation)}
+                          className={`p-4 cursor-pointer transition-colors hover:bg-slate-50 dark:hover:bg-slate-700/50 border-l-4 ${
+                            isSelected 
+                              ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-500' 
+                              : 'border-transparent'
+                          }`}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+                              {partner?.full_name?.[0] || partner?.email?.[0]?.toUpperCase() || '?'}
+                            </div>
+                            
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between mb-1">
+                                <h4 className="font-semibold text-slate-900 dark:text-white truncate">
+                                  {partner?.full_name || partner?.email?.split('@')[0] || 'Unknown'}
+                                </h4>
+                                {conversation.unreadCount && conversation.unreadCount > 0 && (
+                                  <div className="w-5 h-5 bg-blue-600 text-white text-xs rounded-full flex items-center justify-center">
+                                    {conversation.unreadCount}
+                                  </div>
+                                )}
+                              </div>
+                              
+                              <p className="text-xs text-blue-600 dark:text-blue-400 mb-1">
+                                📚 {conversation.skill?.name}
+                              </p>
+                              
+                              {conversation.lastMessage ? (
+                                <div className="flex items-center justify-between">
+                                  <p className="text-sm text-slate-600 dark:text-slate-400 truncate">
+                                    {conversation.lastMessage.content}
+                                  </p>
+                                  <span className="text-xs text-slate-500 ml-2">
+                                    {formatMessageTime(conversation.lastMessage.created_at)}
+                                  </span>
+                                </div>
+                              ) : (
+                                <p className="text-sm text-slate-500 italic">
+                                  Start your conversation
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                ) : (
+                  <div className="p-8 text-center">
+                    <MessageCircle className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+                    <p className="text-slate-600 dark:text-slate-400">
+                      {searchQuery ? 'No conversations found' : 'No active conversations yet'}
+                    </p>
+                    {!searchQuery && (
+                      <p className="text-sm text-slate-500 mt-2">
+                        Accept skill matches to start chatting
+                      </p>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Chat Area */}
+          <div className="lg:col-span-3">
+            {selectedConversation ? (
+              <Card className="h-full shadow-lg border-0 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm flex flex-col">
+                {/* Chat Header */}
+                <CardHeader className="pb-4 border-b border-slate-200 dark:border-slate-700">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                        {getPartnerInfo(selectedConversation)?.full_name?.[0] || 
+                         getPartnerInfo(selectedConversation)?.email?.[0]?.toUpperCase() || '?'}
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-slate-900 dark:text-white">
+                          {getPartnerInfo(selectedConversation)?.full_name || 
+                           getPartnerInfo(selectedConversation)?.email?.split('@')[0] || 'Unknown'}
+                        </h3>
+                        <p className="text-sm text-slate-600 dark:text-slate-400 flex items-center">
+                          <Star className="h-3 w-3 mr-1 text-yellow-500" />
+                          {selectedConversation.skill?.name}
+                          {getPartnerInfo(selectedConversation)?.location && (
+                            <>
+                              <MapPin className="h-3 w-3 ml-2 mr-1" />
+                              {getPartnerInfo(selectedConversation)?.location}
+                            </>
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <Button size="sm" variant="outline">
+                        <Video className="h-4 w-4" />
+                      </Button>
+                      <Button size="sm" variant="outline">
+                        <Phone className="h-4 w-4" />
+                      </Button>
+                      <Button size="sm" variant="outline">
+                        <Calendar className="h-4 w-4" />
+                      </Button>
+                      <Button size="sm" variant="ghost">
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+
+                {/* Messages */}
+                <CardContent className="flex-1 p-0 overflow-hidden">
+                  <div className="h-full overflow-y-auto p-4 space-y-4">
+                    {messages.length > 0 ? (
+                      messages.map((message, index) => {
+                        const isOwn = message.sender_id === user?.id
+                        const prevMessage = messages[index - 1]
+                        const showTimestamp = !prevMessage || 
+                          new Date(message.created_at).getTime() - new Date(prevMessage.created_at).getTime() > 300000 // 5 minutes
+                        
+                        return (
+                          <div key={message.id}>
+                            {showTimestamp && (
+                              <div className="text-center mb-4">
+                                <span className="text-xs text-slate-500 bg-slate-100 dark:bg-slate-700 px-3 py-1 rounded-full">
+                                  {new Date(message.created_at).toLocaleString()}
+                                </span>
+                              </div>
+                            )}
+                            
+                            <div className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}>
+                              <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl ${
+                                isOwn 
+                                  ? 'bg-blue-600 text-white rounded-br-md' 
+                                  : 'bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white rounded-bl-md'
+                              }`}>
+                                <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                                <div className={`flex items-center justify-end mt-1 gap-1 ${
+                                  isOwn ? 'text-blue-100' : 'text-slate-500'
+                                }`}>
+                                  <span className="text-xs">
+                                    {formatMessageTime(message.created_at)}
+                                  </span>
+                                  {isOwn && (
+                                    message.read_at ? 
+                                      <CheckCircle2 className="h-3 w-3" /> : 
+                                      <CheckCircle className="h-3 w-3" />
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )
+                      })
+                    ) : (
+                      <div className="flex-1 flex items-center justify-center">
+                        <div className="text-center">
+                          <MessageCircle className="h-16 w-16 text-slate-400 mx-auto mb-4" />
+                          <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
+                            Start your conversation
+                          </h3>
+                          <p className="text-slate-600 dark:text-slate-400 mb-4">
+                            Say hello and introduce yourself to {getPartnerInfo(selectedConversation)?.full_name || 'your partner'}!
+                          </p>
+                          <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                            <p className="text-sm text-blue-700 dark:text-blue-300">
+                              💡 <strong>Tip:</strong> Start by discussing your learning goals and availability for the <strong>{selectedConversation.skill?.name}</strong> skill exchange.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    <div ref={messagesEndRef} />
+                  </div>
+                </CardContent>
+
+                {/* Message Input */}
+                <div className="p-4 border-t border-slate-200 dark:border-slate-700">
+                  <div className="flex items-end gap-2">
+                    <Button size="sm" variant="ghost" className="mb-2">
+                      <Paperclip className="h-4 w-4" />
+                    </Button>
+                    
+                    <div className="flex-1">
+                      <Input
+                        placeholder="Type your message..."
+                        value={newMessage}
+                        onChange={(e) => setNewMessage(e.target.value)}
+                        onKeyPress={handleKeyPress}
+                        className="resize-none min-h-[40px]"
+                        disabled={sending}
+                      />
+                    </div>
+                    
+                    <Button size="sm" variant="ghost" className="mb-2">
+                      <Smile className="h-4 w-4" />
+                    </Button>
+                    
+                    <Button 
+                      onClick={sendMessage} 
+                      disabled={!newMessage.trim() || sending}
+                      className="mb-2"
+                    >
+                      <Send className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            ) : (
+              <Card className="h-full shadow-lg border-0 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm flex items-center justify-center">
+                <div className="text-center">
+                  <MessageCircle className="h-20 w-20 text-slate-400 mx-auto mb-6" />
+                  <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">
+                    Select a conversation
+                  </h3>
+                  <p className="text-slate-600 dark:text-slate-400">
+                    Choose a conversation from the sidebar to start chatting
+                  </p>
+                </div>
+              </Card>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   )
 } 
