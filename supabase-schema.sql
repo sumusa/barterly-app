@@ -1,9 +1,6 @@
 -- Barterly Database Schema
 -- Run this in your Supabase SQL editor to create all necessary tables
 
--- Enable RLS (Row Level Security)
-ALTER DATABASE postgres SET "app.jwt_secret" TO 'your-jwt-secret';
-
 -- Create custom types
 CREATE TYPE skill_type AS ENUM ('teach', 'learn');
 CREATE TYPE match_status AS ENUM ('pending', 'accepted', 'completed', 'cancelled');
@@ -300,4 +297,13 @@ $$;
 -- Trigger to create profile on signup
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user(); 
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- This will add any existing auth users to the public.users table
+INSERT INTO public.users (id, email, full_name)
+SELECT 
+  auth.users.id, 
+  auth.users.email, 
+  COALESCE(auth.users.raw_user_meta_data->>'full_name', split_part(auth.users.email, '@', 1))
+FROM auth.users 
+WHERE auth.users.id NOT IN (SELECT id FROM public.users); 
