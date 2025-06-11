@@ -9,8 +9,7 @@ import {
   Users, 
   Star, 
   Plus,
-  BookOpen,
-  Filter,
+  BookOpen, 
   Grid,
   List,
   Zap,
@@ -18,8 +17,8 @@ import {
   Heart,
   ChevronRight,
   MapPin,
-  Clock,
-  Award
+  Award,
+  MessageCircle,
 } from 'lucide-react'
 
 export default function SkillMatching() {
@@ -58,8 +57,24 @@ export default function SkillMatching() {
 
   const findMatches = async (skillId: string) => {
     if (!user) return
-    const matches = await db.findPotentialMatches(user.id, skillId)
-    setPotentialMatches(matches)
+    
+    // Get potential matches but exclude current user
+    const { data: matches, error } = await supabase
+      .from('user_skills')
+      .select(`
+        *,
+        user:users(*)
+      `)
+      .eq('skill_id', skillId)
+      .eq('skill_type', 'teach')
+      .neq('user_id', user.id) // Exclude current user
+      .order('proficiency_level', { ascending: false })
+
+    if (!error && matches) {
+      setPotentialMatches(matches)
+    } else {
+      setPotentialMatches([])
+    }
   }
 
   const addUserSkill = async (skillId: string, skillType: 'teach' | 'learn', proficiencyLevel: number) => {
@@ -80,18 +95,54 @@ export default function SkillMatching() {
   const createMatch = async (teacherId: string, skillId: string) => {
     if (!user) return
     
-    const match = await db.createSkillMatch({
-      teacher_id: teacherId,
-      learner_id: user.id,
-      skill_id: skillId,
-      status: 'pending',
-      message: 'Hi! I\'d love to learn this skill from you.'
-    })
+    // Prevent self-matching
+    if (teacherId === user.id) {
+      alert('You cannot request a match with yourself!')
+      return
+    }
     
-    if (match) {
-      alert('Match request sent! 🎉')
+    try {
+      // Create the match request
+      const match = await db.createSkillMatch({
+        teacher_id: teacherId,
+        learner_id: user.id,
+        skill_id: skillId,
+        status: 'pending',
+        message: `Hi! I'd love to learn ${selectedSkill?.name} from you.`
+      })
+      
+      if (match) {
+        // Create notification for the teacher
+        await db.createNotification({
+          user_id: teacherId,
+          type: 'match_request',
+          title: 'New Learning Request',
+          message: `${user.user_metadata?.full_name || user.email} wants to learn ${selectedSkill?.name} from you!`,
+          data: {
+            match_id: match.id,
+            skill_name: selectedSkill?.name,
+            learner_name: user.user_metadata?.full_name || user.email,
+            learner_id: user.id
+          }
+        })
+        
+        alert('Match request sent! The teacher will be notified. 🎉')
+        
+        // Refresh matches to show updated status
+        if (selectedSkill) {
+          findMatches(selectedSkill.id)
+        }
+        
+        // Trigger notification count refresh in navbar
+        window.dispatchEvent(new CustomEvent('notificationUpdate'))
+      }
+    } catch (error) {
+      console.error('Error creating match:', error)
+      alert('Failed to send match request. Please try again.')
     }
   }
+
+
 
   const filteredSkills = Object.entries(skills).reduce((acc, [category, categorySkills]) => {
     if (selectedCategory !== 'all' && category !== selectedCategory) {
@@ -141,6 +192,8 @@ export default function SkillMatching() {
             </Badge>
           </div>
 
+
+
           {/* Stats Row */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/30 border-blue-200">
@@ -160,8 +213,8 @@ export default function SkillMatching() {
                 <div className="flex items-center">
                   <Users className="h-8 w-8 text-green-600 mr-3" />
                   <div>
-                    <p className="text-2xl font-bold text-green-700">1,200+</p>
-                    <p className="text-xs text-green-600">Teachers</p>
+                    <p className="text-2xl font-bold text-green-700">{totalTeachers}</p>
+                    <p className="text-xs text-green-600">Available Teachers</p>
                   </div>
                 </div>
               </CardContent>
@@ -268,7 +321,7 @@ export default function SkillMatching() {
                                 {skill.name}
                               </CardTitle>
                               <CardDescription className="text-sm">
-                                {category} • {Math.floor(Math.random() * 50) + 10} teachers available
+                                {category} • Click to find teachers
                               </CardDescription>
                             </div>
                             <ChevronRight className="h-5 w-5 text-slate-400 group-hover:translate-x-1 transition-transform" />
@@ -380,7 +433,7 @@ export default function SkillMatching() {
                           onClick={() => createMatch(match.user_id, selectedSkill.id)}
                           className="w-full text-xs"
                         >
-                          <Users className="h-3 w-3 mr-1" />
+                          <MessageCircle className="h-3 w-3 mr-1" />
                           Request Match
                         </Button>
                       </div>
@@ -395,15 +448,18 @@ export default function SkillMatching() {
                 ) : selectedSkill ? (
                   <div className="text-center py-8">
                     <Users className="h-12 w-12 text-slate-400 mx-auto mb-4" />
-                    <p className="text-slate-600 dark:text-slate-400">
+                    <p className="text-slate-600 dark:text-slate-400 mb-4">
                       No teachers found for {selectedSkill.name}
+                    </p>
+                    <p className="text-xs text-slate-500 mb-4">
+                      Be the first to teach this skill!
                     </p>
                     <Button 
                       className="mt-4"
                       onClick={() => addUserSkill(selectedSkill.id, 'teach', 3)}
                     >
                       <Plus className="h-4 w-4 mr-2" />
-                      Become the first teacher!
+                      Start Teaching This Skill
                     </Button>
                   </div>
                 ) : (
