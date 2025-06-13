@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { supabase, db } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
@@ -15,7 +15,8 @@ import {
   LogOut,
   Settings,
   Home,
-  Search
+  Search,
+  ChevronDown
 } from 'lucide-react'
 
 export default function Navbar() {
@@ -24,6 +25,7 @@ export default function Navbar() {
   const [unreadMessages, setUnreadMessages] = useState(0)
   const [unreadNotifications, setUnreadNotifications] = useState(0)
   const location = useLocation()
+  const dropdownRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     // Get initial user
@@ -56,6 +58,23 @@ export default function Navbar() {
       window.removeEventListener('notificationUpdate', handleNotificationUpdate)
     }
   }, [user])
+
+  // Click outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(false)
+      }
+    }
+
+    if (isMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isMenuOpen])
 
   const loadUnreadCounts = async (userId: string) => {
     try {
@@ -195,7 +214,7 @@ export default function Navbar() {
               </Link>
 
               {/* User Avatar */}
-              <div className="relative group">
+              <div className="relative group" ref={dropdownRef}>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -208,6 +227,11 @@ export default function Navbar() {
                   <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
                     {user?.email?.split('@')[0] || 'User'}
                   </span>
+                  <ChevronDown 
+                    className={`h-4 w-4 text-slate-400 transition-transform duration-200 ${
+                      isMenuOpen ? 'rotate-180' : ''
+                    }`} 
+                  />
                 </Button>
 
                 {/* Dropdown Menu */}
