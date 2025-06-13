@@ -119,13 +119,6 @@ export default function Navbar() {
       description: 'Schedule & manage'
     },
     {
-      name: 'Notifications',
-      href: '/notifications',
-      icon: Bell,
-      description: 'Match requests & alerts',
-      badge: unreadNotifications > 0 ? unreadNotifications : null
-    },
-    {
       name: 'Profile',
       href: '/profile',
       icon: User,
