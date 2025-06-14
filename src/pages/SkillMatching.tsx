@@ -91,7 +91,7 @@ export default function SkillMatching() {
   const findMatches = async (skillId: string) => {
     if (!user) return
     
-    // Get potential matches but exclude current user
+    // Get all teachers for this skill (including current user)
     const { data: matches, error } = await supabase
       .from('user_skills')
       .select(`
@@ -100,7 +100,6 @@ export default function SkillMatching() {
       `)
       .eq('skill_id', skillId)
       .eq('skill_type', 'teach')
-      .neq('user_id', user.id) // Exclude current user
       .order('proficiency_level', { ascending: false })
 
     if (!error && matches) {
@@ -543,41 +542,72 @@ export default function SkillMatching() {
               <div className="overflow-y-auto max-h-[70vh]">
                 {potentialMatches.length > 0 ? (
                   <div className="p-6 space-y-4">
-                    {potentialMatches.map((match) => (
-                      <div key={match.id} className="group p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-4">
-                            <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold">
-                              {match.user?.full_name?.[0] || match.user?.email?.[0]?.toUpperCase() || '?'}
-                            </div>
-                            <div className="flex-1">
-                              <h4 className="font-semibold text-slate-900">
-                                {match.user?.full_name || match.user?.email?.split('@')[0] || 'Anonymous Teacher'}
-                              </h4>
-                              <div className="flex items-center space-x-3 mt-1">
-                                <div className={`px-2 py-1 rounded-full text-xs text-white font-medium ${getProficiencyColor(match.proficiency_level)}`}>
-                                  {getProficiencyLabel(match.proficiency_level)}
+                    {potentialMatches.map((match) => {
+                      const isCurrentUser = match.user_id === user?.id
+                      
+                      return (
+                        <div key={match.id} className={`group p-4 rounded-xl transition-colors ${
+                          isCurrentUser 
+                            ? 'bg-blue-50 border border-blue-200' 
+                            : 'bg-slate-50 hover:bg-slate-100'
+                        }`}>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-4">
+                              <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold ${
+                                isCurrentUser 
+                                  ? 'bg-gradient-to-br from-blue-600 to-blue-700 ring-2 ring-blue-300' 
+                                  : 'bg-gradient-to-br from-blue-600 to-purple-600'
+                              }`}>
+                                {match.user?.full_name?.[0] || match.user?.email?.[0]?.toUpperCase() || '?'}
+                              </div>
+                              <div className="flex-1">
+                                <div className="flex items-center space-x-2">
+                                  <h4 className="font-semibold text-slate-900">
+                                    {match.user?.full_name || match.user?.email?.split('@')[0] || 'Anonymous Teacher'}
+                                  </h4>
+                                  {isCurrentUser && (
+                                    <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-700">
+                                      You
+                                    </Badge>
+                                  )}
                                 </div>
-                                {match.user?.location && (
-                                  <div className="flex items-center text-xs text-slate-500">
-                                    <MapPin className="w-3 h-3 mr-1" />
-                                    {match.user.location}
+                                <div className="flex items-center space-x-3 mt-1">
+                                  <div className={`px-2 py-1 rounded-full text-xs text-white font-medium ${getProficiencyColor(match.proficiency_level)}`}>
+                                    {getProficiencyLabel(match.proficiency_level)}
                                   </div>
+                                  {match.user?.location && (
+                                    <div className="flex items-center text-xs text-slate-500">
+                                      <MapPin className="w-3 h-3 mr-1" />
+                                      {match.user.location}
+                                    </div>
+                                  )}
+                                </div>
+                                {match.description && (
+                                  <p className="text-sm text-slate-600 mt-2 line-clamp-2">
+                                    {match.description}
+                                  </p>
                                 )}
                               </div>
                             </div>
+                            {isCurrentUser ? (
+                              <div className="text-center">
+                                <div className="text-sm text-blue-600 font-medium">Your Profile</div>
+                                <div className="text-xs text-slate-500">Can't request from yourself</div>
+                              </div>
+                            ) : (
+                              <Button
+                                size="sm"
+                                onClick={() => openMessageDialog(match)}
+                                className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <Send className="w-4 h-4 mr-2" />
+                                Request Match
+                              </Button>
+                            )}
                           </div>
-                          <Button
-                            size="sm"
-                            onClick={() => openMessageDialog(match)}
-                            className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <Send className="w-4 h-4 mr-2" />
-                            Request Match
-                          </Button>
                         </div>
-                      </div>
-                    ))}
+                      )
+                    })}
                   </div>
                 ) : (
                   <div className="p-12 text-center">
