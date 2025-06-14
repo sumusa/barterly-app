@@ -203,8 +203,9 @@ CREATE POLICY "Users can view all profiles" ON public.users FOR SELECT USING (tr
 CREATE POLICY "Users can update own profile" ON public.users FOR UPDATE USING (auth.uid() = id);
 CREATE POLICY "Users can insert own profile" ON public.users FOR INSERT WITH CHECK (auth.uid() = id);
 
--- Skills policies (public read)
+-- Skills policies (public read, authenticated users can create)
 CREATE POLICY "Anyone can view skills" ON public.skills FOR SELECT USING (true);
+CREATE POLICY "Authenticated users can create skills" ON public.skills FOR INSERT TO authenticated WITH CHECK (true);
 
 -- User skills policies
 CREATE POLICY "Anyone can view user skills" ON public.user_skills FOR SELECT USING (true);
