@@ -10,10 +10,6 @@ import {
   Send, 
   Search, 
   MoreVertical,
-  Paperclip,
-  Smile,
-  Phone,
-  Video,
   Info,
   Archive,
   Trash2,
@@ -392,16 +388,10 @@ export default function Messages() {
                     </div>
                     
                     <div className="flex items-center gap-2">
-                      <Button size="sm" variant="outline">
-                        <Video className="h-4 w-4" />
-                      </Button>
-                      <Button size="sm" variant="outline">
-                        <Phone className="h-4 w-4" />
-                      </Button>
-                      <Button size="sm" variant="outline">
+                      <Button size="sm" variant="outline" title="Schedule Session">
                         <Calendar className="h-4 w-4" />
                       </Button>
-                      <Button size="sm" variant="ghost">
+                      <Button size="sm" variant="ghost" title="More Options">
                         <MoreVertical className="h-4 w-4" />
                       </Button>
                     </div>
@@ -493,33 +483,33 @@ export default function Messages() {
 
                 {/* Message Input */}
                 <div className="p-4 border-t border-slate-200 dark:border-slate-700">
-                  <div className="flex items-end gap-2">
-                    <Button size="sm" variant="ghost" className="mb-2">
-                      <Paperclip className="h-4 w-4" />
-                    </Button>
-                    
+                  <div className="flex items-end gap-3">
                     <div className="flex-1">
                       <Input
                         placeholder="Type your message..."
                         value={newMessage}
                         onChange={(e) => setNewMessage(e.target.value)}
                         onKeyPress={handleKeyPress}
-                        className="resize-none min-h-[40px]"
+                        className="resize-none min-h-[44px] text-base"
                         disabled={sending}
                       />
                     </div>
                     
-                    <Button size="sm" variant="ghost" className="mb-2">
-                      <Smile className="h-4 w-4" />
-                    </Button>
-                    
                     <Button 
                       onClick={sendMessage} 
                       disabled={!newMessage.trim() || sending}
-                      className="mb-2"
+                      className="h-[44px] px-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
                     >
-                      <Send className="h-4 w-4" />
+                      {sending ? (
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      ) : (
+                        <Send className="h-4 w-4" />
+                      )}
                     </Button>
+                  </div>
+                  
+                  <div className="mt-2 text-xs text-slate-500">
+                    Press Enter to send, Shift+Enter for new line
                   </div>
                 </div>
               </Card>

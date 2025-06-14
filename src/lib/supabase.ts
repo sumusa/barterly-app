@@ -1,9 +1,32 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient, SupabaseClient } from '@supabase/supabase-js'
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'your-supabase-url'
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://zumworssiscyfselxbek.supabase.co'
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'your-supabase-anon-key'
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// TODO: Add your actual Supabase credentials to .env.local file
+if (supabaseUrl === 'your-supabase-anon-key' || supabaseAnonKey === 'your-supabase-anon-key') {
+  console.warn('⚠️ Using fallback Supabase credentials. Please create .env.local file with your actual credentials.')
+}
+
+// Create a singleton instance to prevent multiple clients
+let supabaseInstance: SupabaseClient | null = null
+
+const getSupabaseClient = () => {
+  if (!supabaseInstance) {
+    supabaseInstance = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+        storage: window.localStorage,
+        storageKey: 'barterly-auth-token'
+      }
+    })
+  }
+  return supabaseInstance
+}
+
+export const supabase = getSupabaseClient()
 
 // Database types matching our schema
 export interface User {
