@@ -13,7 +13,6 @@ import {
   Zap, 
   Globe,
   Shield,
-  TrendingUp,
   CheckCircle,
   PlayCircle,
   Sparkles
