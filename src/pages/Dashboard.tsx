@@ -448,10 +448,10 @@ export default function Dashboard() {
                   <Button 
                     variant="ghost" 
                     size="sm"
-                    onClick={() => window.location.href = '/skills'}
+                    onClick={() => window.location.href = '/matches'}
                     className="text-slate-600 hover:text-slate-900"
                   >
-                    Find more
+                    View all
                     <ChevronRight className="w-4 h-4 ml-1" />
                   </Button>
                 </div>

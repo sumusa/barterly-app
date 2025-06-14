@@ -5,6 +5,7 @@ import Navbar from '@/components/Navbar'
 import Landing from '@/pages/Landing'
 import Dashboard from '@/pages/Dashboard'
 import SkillMatching from '@/pages/SkillMatching'
+import Matches from '@/pages/Matches'
 import Messages from '@/pages/Messages'
 import Sessions from '@/pages/Sessions'
 import Profile from '@/pages/Profile'
@@ -80,6 +81,7 @@ function App() {
               <>
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/skills" element={<SkillMatching />} />
+                <Route path="/matches" element={<Matches />} />
                 <Route path="/messages" element={<Messages />} />
                 <Route path="/sessions" element={<Sessions />} />
                 <Route path="/notifications" element={<Notifications />} />

@@ -88,6 +88,7 @@ export default function Navbar() {
   const navItems = [
     { name: 'Dashboard', href: '/', icon: Home },
     { name: 'Skills', href: '/skills', icon: GraduationCap },
+    { name: 'Matches', href: '/matches', icon: Users },
     { name: 'Messages', href: '/messages', icon: MessageCircle },
     { name: 'Sessions', href: '/sessions', icon: Calendar },
     { name: 'Profile', href: '/profile', icon: User },
