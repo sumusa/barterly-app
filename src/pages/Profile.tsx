@@ -47,6 +47,11 @@ export default function Profile() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [showAddSkillForm, setShowAddSkillForm] = useState(false)
+  const [editingSkill, setEditingSkill] = useState<UserSkill | null>(null)
+  const [editSkillData, setEditSkillData] = useState({
+    proficiency_level: 1,
+    description: ''
+  })
   
   // Form state
   const [formData, setFormData] = useState({
@@ -116,6 +121,34 @@ export default function Profile() {
     const success = await db.removeUserSkill(skillId)
     if (success) {
       setUserSkills(prev => prev.filter(skill => skill.id !== skillId))
+    }
+  }
+
+  const openEditSkill = (skill: UserSkill) => {
+    setEditingSkill(skill)
+    setEditSkillData({
+      proficiency_level: skill.proficiency_level,
+      description: skill.description || ''
+    })
+  }
+
+  const handleEditSkill = async () => {
+    if (!editingSkill) return
+    
+    setSaving(true)
+    try {
+      const updatedSkill = await db.updateUserSkill(editingSkill.id, editSkillData)
+      if (updatedSkill) {
+        setUserSkills(prev => prev.map(skill => 
+          skill.id === editingSkill.id ? { ...skill, ...editSkillData } : skill
+        ))
+        setEditingSkill(null)
+        setEditSkillData({ proficiency_level: 1, description: '' })
+      }
+    } catch (error) {
+      console.error('Error updating skill:', error)
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -496,15 +529,28 @@ export default function Profile() {
                                 </div>
                                 <Badge variant="secondary" className="text-xs">{skill.skill?.category}</Badge>
                               </div>
+                              {skill.description && (
+                                <p className="text-sm text-slate-600 mt-2 line-clamp-2">{skill.description}</p>
+                              )}
                             </div>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => removeSkill(skill.id)}
-                              className="opacity-0 group-hover:opacity-100 transition-opacity text-red-600 hover:text-red-700 hover:bg-red-50"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
+                            <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => openEditSkill(skill)}
+                                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                              >
+                                <Edit3 className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => removeSkill(skill.id)}
+                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
                           </div>
                         </div>
                       ))}
@@ -533,15 +579,28 @@ export default function Profile() {
                                 </div>
                                 <Badge variant="secondary" className="text-xs">{skill.skill?.category}</Badge>
                               </div>
+                              {skill.description && (
+                                <p className="text-sm text-slate-600 mt-2 line-clamp-2">{skill.description}</p>
+                              )}
                             </div>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => removeSkill(skill.id)}
-                              className="opacity-0 group-hover:opacity-100 transition-opacity text-red-600 hover:text-red-700 hover:bg-red-50"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
+                            <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => openEditSkill(skill)}
+                                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                              >
+                                <Edit3 className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => removeSkill(skill.id)}
+                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
                           </div>
                         </div>
                       ))}
@@ -640,6 +699,113 @@ export default function Profile() {
         onClose={() => setShowAddSkillForm(false)}
         onSkillAdded={loadUserData}
       />
+
+      {/* Edit Skill Dialog */}
+      {editingSkill && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl">
+            
+            {/* Dialog Header */}
+            <div className="p-6 border-b border-slate-100">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-900">Edit Skill</h3>
+                  <p className="text-sm text-slate-600 mt-1">
+                    {editingSkill.skill?.name} • {editingSkill.skill_type === 'teach' ? 'Teaching' : 'Learning'}
+                  </p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setEditingSkill(null)
+                    setEditSkillData({ proficiency_level: 1, description: '' })
+                  }}
+                  className="h-8 w-8 p-0"
+                >
+                  ×
+                </Button>
+              </div>
+            </div>
+
+            {/* Edit Form */}
+            <div className="p-6 space-y-4">
+              
+              {/* Proficiency Level */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Proficiency Level
+                </label>
+                <div className="space-y-3">
+                  <input
+                    type="range"
+                    min="1"
+                    max="10"
+                    value={editSkillData.proficiency_level}
+                    onChange={(e) => setEditSkillData({
+                      ...editSkillData,
+                      proficiency_level: parseInt(e.target.value)
+                    })}
+                    className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer slider"
+                  />
+                  <div className="flex justify-between text-xs text-slate-500">
+                    <span>Beginner</span>
+                    <span>Intermediate</span>
+                    <span>Advanced</span>
+                    <span>Expert</span>
+                  </div>
+                  <div className="text-center">
+                    <div className={`inline-flex px-3 py-1 rounded-full text-sm text-white font-medium ${getProficiencyColor(editSkillData.proficiency_level)}`}>
+                      {getProficiencyLabel(editSkillData.proficiency_level)} ({editSkillData.proficiency_level}/10)
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Description (Optional)
+                </label>
+                <textarea
+                  value={editSkillData.description}
+                  onChange={(e) => setEditSkillData({
+                    ...editSkillData,
+                    description: e.target.value
+                  })}
+                  placeholder="Describe your experience with this skill..."
+                  className="w-full h-24 px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                />
+              </div>
+            </div>
+
+            {/* Dialog Actions */}
+            <div className="p-6 pt-0 flex items-center justify-end space-x-3">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setEditingSkill(null)
+                  setEditSkillData({ proficiency_level: 1, description: '' })
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleEditSkill}
+                disabled={saving}
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+              >
+                {saving ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                ) : (
+                  <Save className="w-4 h-4 mr-2" />
+                )}
+                {saving ? 'Saving...' : 'Save Changes'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 } 

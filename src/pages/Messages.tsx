@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { Link } from 'react-router-dom'
 import { supabase, db, type SkillMatch, type Message } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -296,9 +297,12 @@ export default function Messages() {
                             
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center justify-between mb-1">
-                                <h4 className="font-semibold text-slate-900 dark:text-white truncate">
+                                <Link 
+                                  to={`/profile/${partner?.id}`}
+                                  className="font-semibold text-slate-900 dark:text-white hover:text-blue-600 transition-colors truncate"
+                                >
                                   {partner?.full_name || partner?.email?.split('@')[0] || 'Unknown'}
-                                </h4>
+                                </Link>
                                 {conversation.unreadCount && conversation.unreadCount > 0 && (
                                   <div className="w-5 h-5 bg-blue-600 text-white text-xs rounded-full flex items-center justify-center">
                                     {conversation.unreadCount}
@@ -367,10 +371,13 @@ export default function Messages() {
                          getPartnerInfo(selectedConversation)?.email?.[0]?.toUpperCase() || '?'}
                       </div>
                       <div>
-                        <h3 className="font-semibold text-slate-900 dark:text-white">
+                        <Link 
+                          to={`/profile/${getPartnerInfo(selectedConversation)?.id}`}
+                          className="font-semibold text-slate-900 dark:text-white hover:text-blue-600 transition-colors"
+                        >
                           {getPartnerInfo(selectedConversation)?.full_name || 
                            getPartnerInfo(selectedConversation)?.email?.split('@')[0] || 'Unknown'}
-                        </h3>
+                        </Link>
                         <p className="text-sm text-slate-600 dark:text-slate-400 flex items-center">
                           <Star className="h-3 w-3 mr-1 text-yellow-500" />
                           {selectedConversation.skill?.name}

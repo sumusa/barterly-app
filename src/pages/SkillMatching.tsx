@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { supabase, db, type Skill, type UserSkill } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -562,9 +563,12 @@ export default function SkillMatching() {
                               </div>
                               <div className="flex-1">
                                 <div className="flex items-center space-x-2">
-                                  <h4 className="font-semibold text-slate-900">
-                                    {match.user?.full_name || match.user?.email?.split('@')[0] || 'Anonymous Teacher'}
-                                  </h4>
+                                                                <Link 
+                                to={`/profile/${match.user_id}`}
+                                className="font-semibold text-slate-900 hover:text-blue-600 transition-colors"
+                              >
+                                {match.user?.full_name || match.user?.email?.split('@')[0] || 'Anonymous Teacher'}
+                              </Link>
                                   {isCurrentUser && (
                                     <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-700">
                                       You

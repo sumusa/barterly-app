@@ -252,6 +252,25 @@ export const db = {
     return data
   },
 
+  async updateUserSkill(id: string, updates: Partial<Pick<UserSkill, 'proficiency_level' | 'description'>>): Promise<UserSkill | null> {
+    const { data, error } = await supabase
+      .from('user_skills')
+      .update(updates)
+      .eq('id', id)
+      .select(`
+        *,
+        skill:skills(*),
+        user:users(*)
+      `)
+      .single()
+    
+    if (error) {
+      console.error('Error updating user skill:', error)
+      return null
+    }
+    return data
+  },
+
   async removeUserSkill(id: string): Promise<boolean> {
     const { error } = await supabase
       .from('user_skills')
