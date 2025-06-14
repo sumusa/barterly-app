@@ -10,7 +10,6 @@ import {
   Calendar,
   Star,
   Target,
-  Bell,
   ArrowRight,
   Plus,
   Clock,
@@ -502,10 +501,10 @@ export default function Dashboard() {
                               <Button 
                                 size="sm" 
                                 variant="outline" 
-                                onClick={() => window.location.href = '/notifications'}
+                                onClick={() => window.location.href = '/matches'}
                                 className="opacity-0 group-hover:opacity-100 transition-opacity text-amber-600 border-amber-200 hover:bg-amber-50"
                               >
-                                <Bell className="w-4 h-4 mr-1" />
+                                <CheckCircle className="w-4 h-4 mr-1" />
                                 Respond
                               </Button>
                             )}

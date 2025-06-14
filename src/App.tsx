@@ -11,7 +11,6 @@ import Messages from '@/pages/Messages'
 import Sessions from '@/pages/Sessions'
 import Profile from '@/pages/Profile'
 import PublicProfile from '@/pages/PublicProfile'
-import Notifications from '@/pages/Notifications'
 
 function App() {
   const [user, setUser] = useState<any>(null)
@@ -85,7 +84,6 @@ function App() {
                 <Route path="/matches" element={<Matches />} />
                 <Route path="/messages" element={<Messages />} />
                 <Route path="/sessions" element={<Sessions />} />
-                <Route path="/notifications" element={<Notifications />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/profile/:userId" element={<PublicProfile />} />
                 {/* Catch all route for authenticated users */}

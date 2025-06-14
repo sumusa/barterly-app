@@ -132,10 +132,6 @@ export default function SkillMatching() {
     }
     
     try {
-      // Get learner profile for proper name
-      const learnerProfile = await db.getUser(user.id)
-      const learnerName = learnerProfile?.full_name || user.email?.split('@')[0] || 'Someone'
-      
       // Create the match request
       const match = await db.createSkillMatch({
         teacher_id: teacherId,
@@ -146,43 +142,19 @@ export default function SkillMatching() {
       })
       
       if (match) {
-        // Create notification for the teacher
-        const notification = await db.createNotification({
-          user_id: teacherId,
-          type: 'match_request',
-          title: 'New Learning Request',
-          message: `${learnerName} wants to learn ${selectedSkill?.name} from you!`,
-          data: {
-            match_id: match.id,
-            skill_name: selectedSkill?.name,
-            learner_name: learnerName,
-            learner_id: user.id
-          }
+        toast.success('Match Request Sent! 🎉', {
+          description: `Your request to learn ${selectedSkill?.name} has been sent to the teacher. They can accept or decline from their matches page.`,
+          duration: 5000,
         })
         
-        if (notification) {
-          toast.success('Match Request Sent! 🎉', {
-            description: `Your request to learn ${selectedSkill?.name} has been sent to the teacher. They'll be notified and can accept or decline.`,
-            duration: 5000,
-          })
-          
-          // Close dialogs
-          setShowMessageDialog(false)
-          setSelectedTeacher(null)
-          setCustomMessage('')
-          
-          // Refresh matches to show updated status
-          if (selectedSkill) {
-            findMatches(selectedSkill.id)
-          }
-          
-          // Trigger notification count refresh in navbar
-          window.dispatchEvent(new CustomEvent('notificationUpdate'))
-        } else {
-          toast.warning('Match created but notification failed', {
-            description: 'Your match request was created but the teacher may not be notified. You can try contacting them directly.',
-            duration: 5000,
-          })
+        // Close dialogs
+        setShowMessageDialog(false)
+        setSelectedTeacher(null)
+        setCustomMessage('')
+        
+        // Refresh matches to show updated status
+        if (selectedSkill) {
+          findMatches(selectedSkill.id)
         }
       }
     } catch (error) {

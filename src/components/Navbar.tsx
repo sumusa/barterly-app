@@ -4,7 +4,6 @@ import { supabase, db } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { 
-  Bell, 
   User, 
   LogOut, 
   Settings, 
@@ -27,7 +26,7 @@ export default function Navbar() {
   const [userProfile, setUserProfile] = useState<any>(null)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [notificationCount, setNotificationCount] = useState(0)
+
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -38,7 +37,6 @@ export default function Navbar() {
       if (user) {
         const profile = await db.getUser(user.id)
         setUserProfile(profile)
-        loadNotifications(user.id)
       }
     }
     
@@ -58,26 +56,7 @@ export default function Navbar() {
     }
   }, [isDropdownOpen])
 
-  useEffect(() => {
-    const handleNotificationUpdate = () => {
-      if (user) {
-        loadNotifications(user.id)
-      }
-    }
 
-    window.addEventListener('notificationUpdate', handleNotificationUpdate)
-    return () => window.removeEventListener('notificationUpdate', handleNotificationUpdate)
-  }, [user])
-
-  const loadNotifications = async (userId: string) => {
-    try {
-      const notifications = await db.getUserNotifications(userId)
-      const unreadCount = notifications.filter(n => !n.read).length
-      setNotificationCount(unreadCount)
-    } catch (error) {
-      console.error('Error loading notifications:', error)
-    }
-  }
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
@@ -152,24 +131,6 @@ export default function Navbar() {
           {/* Right Side */}
           <div className="flex items-center space-x-3">
             
-            {/* Notifications */}
-            <div className="relative">
-              <Link 
-                to="/notifications"
-                className="relative p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-xl transition-all duration-200"
-              >
-                <Bell className="w-5 h-5" />
-                {notificationCount > 0 && (
-                  <Badge 
-                    variant="destructive" 
-                    className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs bg-gradient-to-r from-red-500 to-pink-500 border-2 border-white shadow-lg animate-pulse"
-                  >
-                    {notificationCount > 9 ? '9+' : notificationCount}
-                  </Badge>
-                )}
-              </Link>
-            </div>
-
             {/* Profile Dropdown */}
             <div className="relative" ref={dropdownRef}>
               <button

@@ -121,16 +121,7 @@ export interface Review {
   session?: Session
 }
 
-export interface Notification {
-  id: string
-  user_id: string
-  title: string
-  message: string
-  type: string
-  read: boolean
-  data?: any
-  created_at: string
-}
+
 
 // Database helper functions
 export const db = {
@@ -476,48 +467,5 @@ export const db = {
     return data || []
   },
 
-  // Notifications
-  async createNotification(notification: Omit<Notification, 'id' | 'created_at' | 'read'>): Promise<Notification | null> {
-    const { data, error } = await supabase
-      .from('notifications')
-      .insert({
-        ...notification,
-        read: false
-      })
-      .select('*')
-      .single()
-    
-    if (error) {
-      console.error('Error creating notification:', error)
-      return null
-    }
-    return data
-  },
 
-  async getUserNotifications(userId: string): Promise<Notification[]> {
-    const { data, error } = await supabase
-      .from('notifications')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-    
-    if (error) {
-      console.error('Error fetching notifications:', error)
-      return []
-    }
-    return data || []
-  },
-
-  async markNotificationAsRead(id: string): Promise<boolean> {
-    const { error } = await supabase
-      .from('notifications')
-      .update({ read: true })
-      .eq('id', id)
-    
-    if (error) {
-      console.error('Error marking notification as read:', error)
-      return false
-    }
-    return true
-  }
 } 
