@@ -388,9 +388,11 @@ export default function Messages() {
                     </div>
                     
                     <div className="flex items-center gap-2">
-                      <Button size="sm" variant="outline" title="Schedule Session">
-                        <Calendar className="h-4 w-4" />
-                      </Button>
+                      <Link to="/sessions">
+                        <Button size="sm" variant="outline" title="Schedule Session">
+                          <Calendar className="h-4 w-4" />
+                        </Button>
+                      </Link>
                       <Button size="sm" variant="ghost" title="More Options">
                         <MoreVertical className="h-4 w-4" />
                       </Button>
