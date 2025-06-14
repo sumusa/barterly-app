@@ -35,6 +35,9 @@ export default function SkillMatching() {
   const [loading, setLoading] = useState(true)
   const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null)
   const [showAddSkillForm, setShowAddSkillForm] = useState(false)
+  const [showMessageDialog, setShowMessageDialog] = useState(false)
+  const [selectedTeacher, setSelectedTeacher] = useState<UserSkill | null>(null)
+  const [customMessage, setCustomMessage] = useState('')
   const [skillMetrics, setSkillMetrics] = useState<Record<string, {
     teacherCount: number
     learnerCount: number
@@ -109,7 +112,13 @@ export default function SkillMatching() {
 
 
 
-  const createMatch = async (teacherId: string, skillId: string) => {
+  const openMessageDialog = (teacher: UserSkill) => {
+    setSelectedTeacher(teacher)
+    setCustomMessage(`Hi! I'd love to learn ${selectedSkill?.name} from you. I'm particularly interested in improving my skills and would appreciate your guidance.`)
+    setShowMessageDialog(true)
+  }
+
+  const createMatch = async (teacherId: string, skillId: string, message?: string) => {
     if (!user) return
     
     // Prevent self-matching
@@ -129,7 +138,7 @@ export default function SkillMatching() {
         learner_id: user.id,
         skill_id: skillId,
         status: 'pending',
-        message: `Hi! I'd love to learn ${selectedSkill?.name} from you.`
+        message: message || `Hi! I'd love to learn ${selectedSkill?.name} from you.`
       })
       
       if (match) {
@@ -150,6 +159,11 @@ export default function SkillMatching() {
         if (notification) {
           alert('Match request sent! The teacher will be notified. 🎉')
           
+          // Close dialogs
+          setShowMessageDialog(false)
+          setSelectedTeacher(null)
+          setCustomMessage('')
+          
           // Refresh matches to show updated status
           if (selectedSkill) {
             findMatches(selectedSkill.id)
@@ -164,6 +178,12 @@ export default function SkillMatching() {
     } catch (error) {
       console.error('Error creating match:', error)
       alert('Failed to send match request. Please try again.')
+    }
+  }
+
+  const handleSendRequest = () => {
+    if (selectedTeacher && selectedSkill) {
+      createMatch(selectedTeacher.user_id, selectedSkill.id, customMessage)
     }
   }
 
@@ -549,7 +569,7 @@ export default function SkillMatching() {
                           </div>
                           <Button
                             size="sm"
-                            onClick={() => createMatch(match.user_id, selectedSkill.id)}
+                            onClick={() => openMessageDialog(match)}
                             className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white opacity-0 group-hover:opacity-100 transition-opacity"
                           >
                             <Send className="w-4 h-4 mr-2" />
@@ -591,6 +611,76 @@ export default function SkillMatching() {
           onClose={() => setShowAddSkillForm(false)}
           onSkillAdded={refreshData}
         />
+
+        {/* Message Dialog */}
+        {showMessageDialog && selectedTeacher && selectedSkill && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl">
+              
+              {/* Dialog Header */}
+              <div className="p-6 border-b border-slate-100">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-900">Send Learning Request</h3>
+                    <p className="text-sm text-slate-600 mt-1">
+                      To {selectedTeacher.user?.full_name || selectedTeacher.user?.email?.split('@')[0]} for {selectedSkill.name}
+                    </p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setShowMessageDialog(false)
+                      setSelectedTeacher(null)
+                      setCustomMessage('')
+                    }}
+                    className="h-8 w-8 p-0"
+                  >
+                    ×
+                  </Button>
+                </div>
+              </div>
+
+              {/* Message Input */}
+              <div className="p-6">
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Your message
+                </label>
+                <textarea
+                  value={customMessage}
+                  onChange={(e) => setCustomMessage(e.target.value)}
+                  placeholder="Introduce yourself and explain why you'd like to learn this skill..."
+                  className="w-full h-32 px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                />
+                <p className="text-xs text-slate-500 mt-2">
+                  This message will be the first message in your conversation when the teacher accepts your request.
+                </p>
+              </div>
+
+              {/* Dialog Actions */}
+              <div className="p-6 pt-0 flex items-center justify-end space-x-3">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowMessageDialog(false)
+                    setSelectedTeacher(null)
+                    setCustomMessage('')
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSendRequest}
+                  disabled={!customMessage.trim()}
+                  className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white"
+                >
+                  <Send className="w-4 h-4 mr-2" />
+                  Send Request
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

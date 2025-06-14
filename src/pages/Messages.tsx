@@ -312,8 +312,15 @@ export default function Messages() {
                               
                               {conversation.lastMessage ? (
                                 <div className="flex items-center justify-between">
-                                  <p className="text-sm text-slate-600 dark:text-slate-400 truncate">
-                                    {conversation.lastMessage.content}
+                                  <p className={`text-sm truncate ${
+                                    conversation.lastMessage.message_type === 'system' 
+                                      ? 'text-green-600 dark:text-green-400 font-medium' 
+                                      : 'text-slate-600 dark:text-slate-400'
+                                  }`}>
+                                    {conversation.lastMessage.message_type === 'system' 
+                                      ? `🎉 ${conversation.lastMessage.content.replace('🎉 ', '')}`
+                                      : conversation.lastMessage.content
+                                    }
                                   </p>
                                   <span className="text-xs text-slate-500 ml-2">
                                     {formatMessageTime(conversation.lastMessage.created_at)}
@@ -414,27 +421,44 @@ export default function Messages() {
                               </div>
                             )}
                             
-                            <div className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}>
-                              <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl ${
-                                isOwn 
-                                  ? 'bg-blue-600 text-white rounded-br-md' 
-                                  : 'bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white rounded-bl-md'
-                              }`}>
-                                <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                                <div className={`flex items-center justify-end mt-1 gap-1 ${
-                                  isOwn ? 'text-blue-100' : 'text-slate-500'
-                                }`}>
-                                  <span className="text-xs">
-                                    {formatMessageTime(message.created_at)}
-                                  </span>
-                                  {isOwn && (
-                                    message.read_at ? 
-                                      <CheckCircle2 className="h-3 w-3" /> : 
-                                      <CheckCircle className="h-3 w-3" />
-                                  )}
+                            {message.message_type === 'system' ? (
+                              // System message - centered with special styling
+                              <div className="flex justify-center">
+                                <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border border-green-200 dark:border-green-800 px-4 py-3 rounded-xl max-w-md">
+                                  <p className="text-sm text-green-800 dark:text-green-200 text-center font-medium">
+                                    {message.content}
+                                  </p>
+                                  <div className="text-center mt-1">
+                                    <span className="text-xs text-green-600 dark:text-green-400">
+                                      {formatMessageTime(message.created_at)}
+                                    </span>
+                                  </div>
                                 </div>
                               </div>
-                            </div>
+                            ) : (
+                              // Regular message
+                              <div className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}>
+                                <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl ${
+                                  isOwn 
+                                    ? 'bg-blue-600 text-white rounded-br-md' 
+                                    : 'bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white rounded-bl-md'
+                                }`}>
+                                  <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                                  <div className={`flex items-center justify-end mt-1 gap-1 ${
+                                    isOwn ? 'text-blue-100' : 'text-slate-500'
+                                  }`}>
+                                    <span className="text-xs">
+                                      {formatMessageTime(message.created_at)}
+                                    </span>
+                                    {isOwn && (
+                                      message.read_at ? 
+                                        <CheckCircle2 className="h-3 w-3" /> : 
+                                        <CheckCircle className="h-3 w-3" />
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         )
                       })

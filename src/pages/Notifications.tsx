@@ -62,6 +62,30 @@ export default function Notifications() {
         const teacherProfile = await db.getUser(user.id)
         const teacherName = teacherProfile?.full_name || user.email?.split('@')[0] || 'Teacher'
         
+        // If accepted, create initial conversation messages
+        if (response === 'accepted') {
+          // Create the original request message first (with earlier timestamp)
+          if (updatedMatch.message) {
+            await db.sendMessage({
+              match_id: matchId,
+              sender_id: updatedMatch.learner_id,
+              content: updatedMatch.message,
+              message_type: 'text'
+            })
+          }
+          
+          // Small delay to ensure proper ordering
+          await new Promise(resolve => setTimeout(resolve, 100))
+          
+          // Create system message announcing the match
+          await db.sendMessage({
+            match_id: matchId,
+            sender_id: user.id, // System message from teacher
+            content: `🎉 ${teacherName} accepted your request to learn ${updatedMatch.skill?.name}! You can now start messaging.`,
+            message_type: 'system'
+          })
+        }
+        
         // Create a response notification for the learner
         await db.createNotification({
           user_id: updatedMatch.learner_id,
