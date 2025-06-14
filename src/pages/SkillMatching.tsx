@@ -119,6 +119,10 @@ export default function SkillMatching() {
     }
     
     try {
+      // Get learner profile for proper name
+      const learnerProfile = await db.getUser(user.id)
+      const learnerName = learnerProfile?.full_name || user.email?.split('@')[0] || 'Someone'
+      
       // Create the match request
       const match = await db.createSkillMatch({
         teacher_id: teacherId,
@@ -130,28 +134,32 @@ export default function SkillMatching() {
       
       if (match) {
         // Create notification for the teacher
-        await db.createNotification({
+        const notification = await db.createNotification({
           user_id: teacherId,
           type: 'match_request',
           title: 'New Learning Request',
-          message: `${user.user_metadata?.full_name || user.email} wants to learn ${selectedSkill?.name} from you!`,
+          message: `${learnerName} wants to learn ${selectedSkill?.name} from you!`,
           data: {
             match_id: match.id,
             skill_name: selectedSkill?.name,
-            learner_name: user.user_metadata?.full_name || user.email,
+            learner_name: learnerName,
             learner_id: user.id
           }
         })
         
-        alert('Match request sent! The teacher will be notified. 🎉')
-        
-        // Refresh matches to show updated status
-        if (selectedSkill) {
-          findMatches(selectedSkill.id)
+        if (notification) {
+          alert('Match request sent! The teacher will be notified. 🎉')
+          
+          // Refresh matches to show updated status
+          if (selectedSkill) {
+            findMatches(selectedSkill.id)
+          }
+          
+          // Trigger notification count refresh in navbar
+          window.dispatchEvent(new CustomEvent('notificationUpdate'))
+        } else {
+          alert('Match created but notification failed. The teacher may not be notified.')
         }
-        
-        // Trigger notification count refresh in navbar
-        window.dispatchEvent(new CustomEvent('notificationUpdate'))
       }
     } catch (error) {
       console.error('Error creating match:', error)

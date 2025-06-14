@@ -72,7 +72,7 @@ export default function Navbar() {
   const loadNotifications = async (userId: string) => {
     try {
       const notifications = await db.getUserNotifications(userId)
-      const unreadCount = notifications.filter(n => !n.read_at).length
+      const unreadCount = notifications.filter(n => !n.read).length
       setNotificationCount(unreadCount)
     } catch (error) {
       console.error('Error loading notifications:', error)

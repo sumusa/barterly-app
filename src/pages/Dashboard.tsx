@@ -486,17 +486,35 @@ export default function Dashboard() {
                               </div>
                             </div>
                           </div>
-                          {match.status === 'accepted' && (
-                            <Button 
-                              size="sm" 
-                              variant="outline" 
-                              onClick={() => window.location.href = '/messages'}
-                              className="opacity-0 group-hover:opacity-100 transition-opacity"
-                            >
-                              <MessageCircle className="w-4 h-4 mr-1" />
-                              Message
-                            </Button>
-                          )}
+                          <div className="flex items-center space-x-2">
+                            {match.status === 'accepted' && (
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                onClick={() => window.location.href = '/messages'}
+                                className="opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <MessageCircle className="w-4 h-4 mr-1" />
+                                Message
+                              </Button>
+                            )}
+                            {match.status === 'pending' && match.teacher_id === user?.id && (
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                onClick={() => window.location.href = '/notifications'}
+                                className="opacity-0 group-hover:opacity-100 transition-opacity text-amber-600 border-amber-200 hover:bg-amber-50"
+                              >
+                                <Bell className="w-4 h-4 mr-1" />
+                                Respond
+                              </Button>
+                            )}
+                            {match.status === 'pending' && match.learner_id === user?.id && (
+                              <Badge variant="secondary" className="text-xs text-amber-600 bg-amber-50">
+                                Waiting for response
+                              </Badge>
+                            )}
+                          </div>
                         </div>
                       </div>
                     )

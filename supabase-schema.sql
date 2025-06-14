@@ -250,6 +250,7 @@ CREATE POLICY "Users can update own reviews" ON public.reviews FOR UPDATE USING 
 -- Notifications policies
 CREATE POLICY "Users can view own notifications" ON public.notifications FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "Users can update own notifications" ON public.notifications FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "System can create notifications" ON public.notifications FOR INSERT WITH CHECK (true);
 
 -- Create indexes for performance
 CREATE INDEX idx_user_skills_user_id ON public.user_skills(user_id);

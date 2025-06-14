@@ -58,18 +58,22 @@ export default function Notifications() {
         // Mark notification as read
         await db.markNotificationAsRead(notificationId)
         
+        // Get teacher profile for proper name
+        const teacherProfile = await db.getUser(user.id)
+        const teacherName = teacherProfile?.full_name || user.email?.split('@')[0] || 'Teacher'
+        
         // Create a response notification for the learner
         await db.createNotification({
           user_id: updatedMatch.learner_id,
           type: 'match_response',
           title: response === 'accepted' ? 'Match Request Accepted! 🎉' : 'Match Request Declined',
           message: response === 'accepted' 
-            ? `${user.user_metadata?.full_name || user.email} accepted your request to learn ${updatedMatch.skill?.name}! You can now start messaging.`
-            : `${user.user_metadata?.full_name || user.email} declined your request to learn ${updatedMatch.skill?.name}.`,
+            ? `${teacherName} accepted your request to learn ${updatedMatch.skill?.name}! You can now start messaging.`
+            : `${teacherName} declined your request to learn ${updatedMatch.skill?.name}.`,
           data: {
             match_id: matchId,
             skill_name: updatedMatch.skill?.name,
-            teacher_name: user.user_metadata?.full_name || user.email,
+            teacher_name: teacherName,
             response: response
           }
         })
