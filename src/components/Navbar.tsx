@@ -4,308 +4,288 @@ import { supabase, db } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { 
-  Zap, 
+  Bell, 
   User, 
-  MessageCircle, 
-  Calendar, 
-  BookOpen, 
-  Bell,
-  Menu,
-  X,
-  LogOut,
-  Settings,
+  LogOut, 
+  Settings, 
+  ChevronDown,
   Home,
-  Search,
-  ChevronDown
+  Users,
+  MessageCircle,
+  Calendar,
+  GraduationCap,
+  BookOpen,
+  Sparkles,
+  Target,
+  Menu,
+  X
 } from 'lucide-react'
 
 export default function Navbar() {
-  const [user, setUser] = useState<any>(null)
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [unreadMessages, setUnreadMessages] = useState(0)
-  const [unreadNotifications, setUnreadNotifications] = useState(0)
   const location = useLocation()
+  const [user, setUser] = useState<any>(null)
+  const [userProfile, setUserProfile] = useState<any>(null)
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [notificationCount, setNotificationCount] = useState(0)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    // Get initial user
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
       setUser(user)
+      
       if (user) {
-        loadUnreadCounts(user.id)
-      }
-    })
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user ?? null)
-      if (session?.user) {
-        loadUnreadCounts(session.user.id)
-      }
-    })
-
-    // Listen for notification updates
-    const handleNotificationUpdate = () => {
-      if (user) {
-        loadUnreadCounts(user.id)
+        const profile = await db.getUser(user.id)
+        setUserProfile(profile)
+        loadNotifications(user.id)
       }
     }
     
-    window.addEventListener('notificationUpdate', handleNotificationUpdate)
+    getUser()
+  }, [])
 
-    return () => {
-      subscription.unsubscribe()
-      window.removeEventListener('notificationUpdate', handleNotificationUpdate)
-    }
-  }, [user])
-
-  // Click outside to close dropdown
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsMenuOpen(false)
+        setIsDropdownOpen(false)
       }
     }
 
-    if (isMenuOpen) {
+    if (isDropdownOpen) {
       document.addEventListener('mousedown', handleClickOutside)
+      return () => document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isDropdownOpen])
+
+  useEffect(() => {
+    const handleNotificationUpdate = () => {
+      if (user) {
+        loadNotifications(user.id)
+      }
     }
 
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [isMenuOpen])
+    window.addEventListener('notificationUpdate', handleNotificationUpdate)
+    return () => window.removeEventListener('notificationUpdate', handleNotificationUpdate)
+  }, [user])
 
-  const loadUnreadCounts = async (userId: string) => {
+  const loadNotifications = async (userId: string) => {
     try {
-      // Load unread notifications
       const notifications = await db.getUserNotifications(userId)
-      const unreadCount = notifications.filter(n => !n.read).length
-      setUnreadNotifications(unreadCount)
+      const unreadCount = notifications.filter(n => !n.read_at).length
+      setNotificationCount(unreadCount)
     } catch (error) {
-      console.error('Error loading unread counts:', error)
+      console.error('Error loading notifications:', error)
     }
   }
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
-    setIsMenuOpen(false)
+    setUser(null)
+    setUserProfile(null)
   }
 
   const navItems = [
-    {
-      name: 'Dashboard',
-      href: '/dashboard',
-      icon: Home,
-      description: 'Your overview'
-    },
-    {
-      name: 'Skills',
-      href: '/skills',
-      icon: BookOpen,
-      description: 'Find & learn'
-    },
-    {
-      name: 'Messages',
-      href: '/messages',
-      icon: MessageCircle,
-      description: 'Chat with partners',
-      badge: unreadMessages > 0 ? unreadMessages : null
-    },
-    {
-      name: 'Sessions',
-      href: '/sessions',
-      icon: Calendar,
-      description: 'Schedule & manage'
-    },
-    {
-      name: 'Profile',
-      href: '/profile',
-      icon: User,
-      description: 'Your account'
-    }
+    { name: 'Dashboard', href: '/', icon: Home },
+    { name: 'Skills', href: '/skills', icon: GraduationCap },
+    { name: 'Messages', href: '/messages', icon: MessageCircle },
+    { name: 'Sessions', href: '/sessions', icon: Calendar },
+    { name: 'Profile', href: '/profile', icon: User },
   ]
 
-  const isActive = (href: string) => location.pathname === href
+  const isActive = (href: string) => {
+    if (href === '/') {
+      return location.pathname === '/'
+    }
+    return location.pathname.startsWith(href)
+  }
 
   if (!user) {
-    return null // Don't show navbar when not logged in
+    return null
   }
 
   return (
-    <>
-      {/* Desktop Navbar */}
-      <nav className="hidden lg:block fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-700/50">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            {/* Logo */}
-            <Link to="/dashboard" className="flex items-center space-x-3 group">
-              <div className="relative">
-                <div className="w-10 h-10 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105">
-                  <Zap className="h-6 w-6 text-white" />
-                </div>
-                <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-green-400 to-blue-500 rounded-full animate-pulse"></div>
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-blue-700 bg-clip-text text-transparent">
-                  barterly
-                </h1>
-                <p className="text-xs text-slate-500 dark:text-slate-400 -mt-1">
-                  skill exchange
-                </p>
-              </div>
-            </Link>
+    <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200/50 shadow-sm">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
+        <div className="flex items-center justify-between h-16">
+          
+          {/* Logo */}
+          <Link to="/" className="flex items-center space-x-3 group">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform duration-200">
+              <Sparkles className="w-6 h-6 text-white" />
+            </div>
+            <div className="hidden sm:block">
+              <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                barterly
+              </h1>
+              <p className="text-xs text-slate-500 -mt-1">Skill Exchange</p>
+            </div>
+          </Link>
 
-            {/* Navigation Links */}
-            <div className="flex items-center space-x-2">
-              {navItems.map((item) => {
-                const Icon = item.icon
-                const active = isActive(item.href)
-                
-                return (
-                  <Link
-                    key={item.name}
-                    to={item.href}
-                    className={`relative group px-4 py-2.5 rounded-xl transition-all duration-200 ${
-                      active
-                        ? 'bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 text-blue-700 dark:text-blue-300 shadow-sm'
-                        : 'hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-                    }`}
+          {/* Desktop Navigation */}
+          <div className="hidden lg:flex items-center space-x-1">
+            {navItems.map((item) => {
+              const Icon = item.icon
+              const active = isActive(item.href)
+              
+              return (
+                <Link
+                  key={item.name}
+                  to={item.href}
+                  className={`group relative px-4 py-2 rounded-xl transition-all duration-200 flex items-center space-x-2 ${
+                    active 
+                      ? 'bg-gradient-to-r from-blue-50 to-purple-50 text-blue-700 shadow-sm' 
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                  }`}
+                >
+                  <Icon className={`w-4 h-4 ${active ? 'text-blue-600' : 'text-slate-500 group-hover:text-slate-700'}`} />
+                  <span className="text-sm font-medium">{item.name}</span>
+                  {active && (
+                    <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-6 h-0.5 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full"></div>
+                  )}
+                </Link>
+              )
+            })}
+          </div>
+
+          {/* Right Side */}
+          <div className="flex items-center space-x-3">
+            
+            {/* Notifications */}
+            <div className="relative">
+              <Link 
+                to="/notifications"
+                className="relative p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-xl transition-all duration-200"
+              >
+                <Bell className="w-5 h-5" />
+                {notificationCount > 0 && (
+                  <Badge 
+                    variant="destructive" 
+                    className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs bg-gradient-to-r from-red-500 to-pink-500 border-2 border-white shadow-lg animate-pulse"
                   >
-                    <div className="flex items-center space-x-2">
-                      <Icon className={`h-5 w-5 ${active ? 'text-blue-600 dark:text-blue-400' : ''}`} />
-                      <span className="font-medium text-sm">{item.name}</span>
-                      {item.badge && (
-                        <Badge variant="destructive" className="text-xs px-1.5 py-0.5 h-5 min-w-[20px] flex items-center justify-center">
-                          {item.badge}
-                        </Badge>
-                      )}
-                    </div>
-                    
-                    {/* Tooltip */}
-                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-3 py-1.5 bg-slate-900 dark:bg-slate-700 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none">
-                      {item.description}
-                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-b-4 border-l-transparent border-r-transparent border-b-slate-900 dark:border-b-slate-700"></div>
-                    </div>
-                  </Link>
-                )
-              })}
+                    {notificationCount > 9 ? '9+' : notificationCount}
+                  </Badge>
+                )}
+              </Link>
             </div>
 
-            {/* User Menu */}
-            <div className="flex items-center space-x-4">
-              {/* Quick Notifications Button */}
-              <Link to="/notifications">
-                <Button variant="ghost" size="sm" className="relative hover:bg-slate-100 dark:hover:bg-slate-800">
-                  <Bell className="h-5 w-5" />
-                  {unreadNotifications > 0 && (
-                    <Badge variant="destructive" className="absolute -top-1 -right-1 text-xs px-1 py-0 h-4 min-w-[16px] flex items-center justify-center">
-                      {unreadNotifications}
-                    </Badge>
-                  )}
-                </Button>
-              </Link>
-
-              {/* User Avatar */}
-              <div className="relative group" ref={dropdownRef}>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="flex items-center space-x-2 hover:bg-slate-100 dark:hover:bg-slate-800 px-3 py-2"
-                  onClick={() => setIsMenuOpen(!isMenuOpen)}
-                >
-                  <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-semibold">
-                    {user?.email?.[0]?.toUpperCase() || '?'}
-                  </div>
-                  <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                    {user?.email?.split('@')[0] || 'User'}
+            {/* Profile Dropdown */}
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="flex items-center space-x-3 p-1 pr-3 rounded-xl hover:bg-slate-50 transition-all duration-200 group"
+              >
+                <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center text-white shadow-sm group-hover:scale-105 transition-transform">
+                  <span className="text-sm font-semibold">
+                    {userProfile?.full_name?.[0] || user?.email?.[0]?.toUpperCase() || '?'}
                   </span>
-                  <ChevronDown 
-                    className={`h-4 w-4 text-slate-400 transition-transform duration-200 ${
-                      isMenuOpen ? 'rotate-180' : ''
-                    }`} 
-                  />
-                </Button>
+                </div>
+                <div className="hidden sm:block text-left">
+                  <p className="text-sm font-medium text-slate-900">
+                    {userProfile?.full_name || user?.email?.split('@')[0] || 'User'}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    {userProfile?.location || 'Complete profile'}
+                  </p>
+                </div>
+                <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
 
-                {/* Dropdown Menu */}
-                {isMenuOpen && (
-                  <div className="absolute top-full right-0 mt-2 w-64 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 py-2 z-50">
-                    <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-700">
-                      <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
-                        {user?.email}
-                      </p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">
-                        Skill Exchange Member
-                      </p>
+              {/* Dropdown Menu */}
+              {isDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-72 bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-slate-200/50 py-2 z-50">
+                  
+                  {/* Profile Header */}
+                  <div className="px-4 py-3 border-b border-slate-100">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center text-white shadow-lg">
+                        <span className="text-lg font-bold">
+                          {userProfile?.full_name?.[0] || user?.email?.[0]?.toUpperCase() || '?'}
+                        </span>
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-slate-900">
+                          {userProfile?.full_name || 'Complete your profile'}
+                        </h3>
+                        <p className="text-sm text-slate-600">{user?.email}</p>
+                        {userProfile?.location && (
+                          <p className="text-xs text-slate-500">{userProfile.location}</p>
+                        )}
+                      </div>
                     </div>
-                    
+                  </div>
+
+                  {/* Menu Items */}
+                  <div className="py-2">
                     <Link
                       to="/profile"
-                      className="flex items-center px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
-                      onClick={() => setIsMenuOpen(false)}
+                      onClick={() => setIsDropdownOpen(false)}
+                      className="flex items-center space-x-3 px-4 py-2 text-slate-700 hover:bg-slate-50 transition-colors"
                     >
-                      <User className="h-4 w-4 mr-3" />
-                      View Profile
+                      <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">
+                        <User className="w-4 h-4 text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium">Profile</p>
+                        <p className="text-xs text-slate-500">Manage your information</p>
+                      </div>
                     </Link>
-                    
-                    <button
-                      className="w-full flex items-center px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      <Settings className="h-4 w-4 mr-3" />
-                      Settings
-                    </button>
-                    
-                    <div className="border-t border-slate-200 dark:border-slate-700 mt-2 pt-2">
-                      <button
-                        onClick={handleSignOut}
-                        className="w-full flex items-center px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
-                      >
-                        <LogOut className="h-4 w-4 mr-3" />
-                        Sign Out
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </nav>
 
-      {/* Mobile Navbar */}
-      <nav className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-700/50">
-        <div className="px-4 py-3">
-          <div className="flex items-center justify-between">
-            {/* Logo */}
-            <Link to="/dashboard" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                <Zap className="h-5 w-5 text-white" />
-              </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                barterly
-              </span>
-            </Link>
+                    <Link
+                      to="/settings"
+                      onClick={() => setIsDropdownOpen(false)}
+                      className="flex items-center space-x-3 px-4 py-2 text-slate-700 hover:bg-slate-50 transition-colors"
+                    >
+                      <div className="w-8 h-8 bg-purple-50 rounded-lg flex items-center justify-center">
+                        <Settings className="w-4 h-4 text-purple-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium">Settings</p>
+                        <p className="text-xs text-slate-500">Preferences & privacy</p>
+                      </div>
+                    </Link>
+                  </div>
+
+                  {/* Sign Out */}
+                  <div className="border-t border-slate-100 pt-2">
+                    <button
+                      onClick={() => {
+                        handleSignOut()
+                        setIsDropdownOpen(false)
+                      }}
+                      className="flex items-center space-x-3 px-4 py-2 text-red-600 hover:bg-red-50 transition-colors w-full"
+                    >
+                      <div className="w-8 h-8 bg-red-50 rounded-lg flex items-center justify-center">
+                        <LogOut className="w-4 h-4 text-red-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium">Sign out</p>
+                        <p className="text-xs text-red-500">See you again soon</p>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Mobile Menu Button */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="relative"
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="lg:hidden p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-xl transition-all duration-200"
             >
-              {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-              {unreadMessages > 0 && (
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></div>
+              {isMobileMenuOpen ? (
+                <X className="w-5 h-5" />
+              ) : (
+                <Menu className="w-5 h-5" />
               )}
-            </Button>
+            </button>
           </div>
         </div>
 
         {/* Mobile Menu */}
-        {isMenuOpen && (
-          <div className="absolute top-full left-0 right-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-700/50">
-            <div className="px-4 py-4 space-y-2">
+        {isMobileMenuOpen && (
+          <div className="lg:hidden border-t border-slate-200/50 py-4">
+            <div className="space-y-2">
               {navItems.map((item) => {
                 const Icon = item.icon
                 const active = isActive(item.href)
@@ -314,88 +294,25 @@ export default function Navbar() {
                   <Link
                     key={item.name}
                     to={item.href}
-                    className={`flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 ${
-                      active
-                        ? 'bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 text-blue-700 dark:text-blue-300'
-                        : 'hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-700 dark:text-slate-300'
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+                      active 
+                        ? 'bg-gradient-to-r from-blue-50 to-purple-50 text-blue-700' 
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                     }`}
-                    onClick={() => setIsMenuOpen(false)}
                   >
-                    <div className="flex items-center space-x-3">
-                      <Icon className={`h-5 w-5 ${active ? 'text-blue-600 dark:text-blue-400' : ''}`} />
-                      <div>
-                        <span className="font-medium">{item.name}</span>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">
-                          {item.description}
-                        </p>
-                      </div>
-                    </div>
-                    {item.badge && (
-                      <Badge variant="destructive" className="text-xs">
-                        {item.badge}
-                      </Badge>
+                    <Icon className={`w-5 h-5 ${active ? 'text-blue-600' : 'text-slate-500'}`} />
+                    <span className="font-medium">{item.name}</span>
+                    {active && (
+                      <div className="ml-auto w-2 h-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full"></div>
                     )}
                   </Link>
                 )
               })}
-              
-              <div className="border-t border-slate-200 dark:border-slate-700 pt-2 mt-2">
-                <button
-                  onClick={handleSignOut}
-                  className="w-full flex items-center px-4 py-3 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors"
-                >
-                  <LogOut className="h-5 w-5 mr-3" />
-                  <span className="font-medium">Sign Out</span>
-                </button>
-              </div>
             </div>
           </div>
         )}
-      </nav>
-
-      {/* Spacer for fixed navbar */}
-      <div className="h-20 lg:h-24"></div>
-
-      {/* Mobile Bottom Navigation */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-t border-slate-200/50 dark:border-slate-700/50">
-        <div className="flex items-center justify-around px-2 py-2">
-          {navItems.slice(0, 5).map((item) => {
-            const Icon = item.icon
-            const active = isActive(item.href)
-            
-            return (
-              <Link
-                key={item.name}
-                to={item.href}
-                className={`relative flex flex-col items-center justify-center px-3 py-2 rounded-xl transition-all duration-200 ${
-                  active
-                    ? 'text-blue-600 dark:text-blue-400'
-                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
-                }`}
-              >
-                <Icon className="h-6 w-6 mb-1" />
-                <span className="text-xs font-medium">{item.name}</span>
-                {item.badge && (
-                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                    {item.badge}
-                  </div>
-                )}
-              </Link>
-            )
-          })}
-        </div>
       </div>
-
-      {/* Bottom spacer for mobile */}
-      <div className="lg:hidden h-20"></div>
-
-      {/* Overlay for mobile menu */}
-      {isMenuOpen && (
-        <div
-          className="lg:hidden fixed inset-0 bg-black/20 z-40"
-          onClick={() => setIsMenuOpen(false)}
-        />
-      )}
-    </>
+    </nav>
   )
 } 

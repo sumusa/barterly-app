@@ -1,17 +1,15 @@
 import { useState, useEffect } from 'react'
-import { supabase, db, type User, type UserSkill, type SkillMatch, type Session, type Message } from '@/lib/supabase'
+import { supabase, db, type User, type UserSkill, type SkillMatch, type Session } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { 
-  TrendingUp, 
   Users, 
   BookOpen, 
   MessageCircle, 
   Calendar,
   Star,
   Target,
-  Zap,
   Bell,
   ArrowRight,
   Plus,
@@ -22,11 +20,14 @@ import {
   Activity,
   MapPin,
   Video,
-  Phone,
   Eye,
   Heart,
-  Coffee,
-  Lightbulb
+  Lightbulb,
+  TrendingUp,
+  Zap,
+  ChevronRight,
+  Sparkles,
+  PlayCircle
 } from 'lucide-react'
 
 interface DashboardStats {
@@ -177,9 +178,16 @@ export default function Dashboard() {
     const hour = new Date().getHours()
     const name = userProfile?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'there'
     
-    if (hour < 12) return `Good morning, ${name}! ☀️`
-    if (hour < 17) return `Good afternoon, ${name}! 🌤️`
-    return `Good evening, ${name}! 🌙`
+    if (hour < 12) return `Good morning, ${name}`
+    if (hour < 17) return `Good afternoon, ${name}`
+    return `Good evening, ${name}`
+  }
+
+  const getGreetingEmoji = () => {
+    const hour = new Date().getHours()
+    if (hour < 12) return '☀️'
+    if (hour < 17) return '🌤️'
+    return '🌙'
   }
 
   const getActivityIcon = (type: RecentActivity['type']) => {
@@ -187,7 +195,7 @@ export default function Dashboard() {
       case 'match_request': return <Users className="h-4 w-4 text-blue-600" />
       case 'message': return <MessageCircle className="h-4 w-4 text-green-600" />
       case 'session_scheduled': return <Calendar className="h-4 w-4 text-purple-600" />
-      case 'session_completed': return <CheckCircle className="h-4 w-4 text-green-600" />
+      case 'session_completed': return <CheckCircle className="h-4 w-4 text-emerald-600" />
       case 'skill_added': return <BookOpen className="h-4 w-4 text-orange-600" />
       default: return <Activity className="h-4 w-4 text-slate-600" />
     }
@@ -200,338 +208,309 @@ export default function Dashboard() {
     
     if (diffInHours < 1) return 'Just now'
     if (diffInHours < 24) return `${Math.floor(diffInHours)}h ago`
-    if (diffInHours < 168) return `${Math.floor(diffInHours / 24)}d ago`
-    return time.toLocaleDateString()
+    if (diffInHours < 48) return 'Yesterday'
+    return `${Math.floor(diffInHours / 24)}d ago`
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+      <div className="min-h-screen flex items-center justify-center bg-slate-50/50">
+        <div className="flex flex-col items-center space-y-6">
+          <div className="relative">
+            <div className="w-20 h-20 bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-600 rounded-3xl flex items-center justify-center shadow-xl animate-pulse">
+              <Sparkles className="w-10 h-10 text-white animate-spin" />
+            </div>
+            <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full animate-ping"></div>
+          </div>
+          <div className="text-center space-y-2">
+            <h3 className="text-lg font-semibold text-slate-900">Loading your dashboard</h3>
+            <p className="text-sm text-slate-500">Gathering your latest activity and insights...</p>
+          </div>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30 dark:from-slate-900 dark:via-blue-900/10 dark:to-indigo-900/10">
-      <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-7xl">
+        
         {/* Welcome Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-slate-900 dark:text-white mb-2">
-            {getGreeting()}
-          </h1>
-          <p className="text-lg text-slate-600 dark:text-slate-300">
-            {stats.totalSkills > 0 
-              ? "Here's what's happening in your skill exchange journey"
-              : "Welcome to barterly! Let's get you started with skill exchanges"
-            }
-          </p>
+        <div className="mb-10">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-6 lg:space-y-0">
+            <div className="space-y-3">
+              <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-3">
+                  <span className="text-4xl">{getGreetingEmoji()}</span>
+                  <div>
+                    <h1 className="text-3xl lg:text-4xl font-bold text-slate-900 leading-tight">
+                      {getGreeting()}
+                    </h1>
+                    <p className="text-lg text-slate-600 mt-1">
+                      Ready to learn something new today?
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Actions */}
+            <div className="flex items-center space-x-3">
+              <Button 
+                onClick={() => window.location.href = '/skills'}
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 group"
+              >
+                <Plus className="w-4 h-4 mr-2 group-hover:rotate-90 transition-transform duration-200" />
+                Find Skills
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => window.location.href = '/sessions'}
+                className="border-slate-200 hover:bg-slate-50 hover:border-slate-300 transition-all duration-200"
+              >
+                <Calendar className="w-4 h-4 mr-2" />
+                Schedule
+              </Button>
+            </div>
+          </div>
         </div>
 
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card className="shadow-lg border-0 bg-gradient-to-r from-blue-500 to-blue-600 text-white">
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+          {/* Skills Overview */}
+          <Card className="group hover:shadow-lg transition-all duration-300 border-0 shadow-sm bg-white/80 backdrop-blur-sm">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-blue-100 text-sm font-medium">Skills Added</p>
-                  <p className="text-3xl font-bold">{stats.totalSkills}</p>
-                  <p className="text-blue-100 text-xs mt-1">
-                    {stats.teachingSkills} teaching • {stats.learningSkills} learning
-                  </p>
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-slate-600">Total Skills</p>
+                  <p className="text-3xl font-bold text-slate-900">{stats.totalSkills}</p>
+                  <div className="flex items-center space-x-4 text-xs text-slate-500">
+                    <span className="flex items-center">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full mr-1"></div>
+                      {stats.teachingSkills} teaching
+                    </span>
+                    <span className="flex items-center">
+                      <div className="w-2 h-2 bg-purple-500 rounded-full mr-1"></div>
+                      {stats.learningSkills} learning
+                    </span>
+                  </div>
                 </div>
-                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                  <BookOpen className="h-6 w-6" />
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                  <BookOpen className="w-6 h-6 text-white" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="shadow-lg border-0 bg-gradient-to-r from-green-500 to-green-600 text-white">
+          {/* Active Matches */}
+          <Card className="group hover:shadow-lg transition-all duration-300 border-0 shadow-sm bg-white/80 backdrop-blur-sm">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-green-100 text-sm font-medium">Active Matches</p>
-                  <p className="text-3xl font-bold">{stats.activeMatches}</p>
-                  <p className="text-green-100 text-xs mt-1">
-                    {stats.pendingMatches} pending requests
-                  </p>
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-slate-600">Active Matches</p>
+                  <p className="text-3xl font-bold text-slate-900">{stats.activeMatches}</p>
+                  {stats.pendingMatches > 0 && (
+                    <p className="text-xs text-amber-600 font-medium">
+                      {stats.pendingMatches} pending requests
+                    </p>
+                  )}
                 </div>
-                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                  <Users className="h-6 w-6" />
+                <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                  <Users className="w-6 h-6 text-white" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="shadow-lg border-0 bg-gradient-to-r from-purple-500 to-purple-600 text-white">
+          {/* Messages */}
+          <Card className="group hover:shadow-lg transition-all duration-300 border-0 shadow-sm bg-white/80 backdrop-blur-sm">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-purple-100 text-sm font-medium">Upcoming Sessions</p>
-                  <p className="text-3xl font-bold">{stats.upcomingSessions}</p>
-                  <p className="text-purple-100 text-xs mt-1">
-                    {stats.completedSessions} completed
-                  </p>
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-slate-600">Messages</p>
+                  <p className="text-3xl font-bold text-slate-900">{stats.unreadMessages}</p>
+                  <p className="text-xs text-slate-500">unread messages</p>
                 </div>
-                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                  <Calendar className="h-6 w-6" />
+                <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                  <MessageCircle className="w-6 h-6 text-white" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="shadow-lg border-0 bg-gradient-to-r from-orange-500 to-orange-600 text-white">
+          {/* Sessions */}
+          <Card className="group hover:shadow-lg transition-all duration-300 border-0 shadow-sm bg-white/80 backdrop-blur-sm">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-orange-100 text-sm font-medium">Messages</p>
-                  <p className="text-3xl font-bold">{stats.unreadMessages}</p>
-                  <p className="text-orange-100 text-xs mt-1">
-                    unread messages
-                  </p>
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-slate-600">Sessions</p>
+                  <p className="text-3xl font-bold text-slate-900">{stats.upcomingSessions}</p>
+                  <p className="text-xs text-slate-500">upcoming sessions</p>
                 </div>
-                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                  <MessageCircle className="h-6 w-6" />
+                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                  <Calendar className="w-6 h-6 text-white" />
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
-            {/* Quick Actions */}
-            {stats.totalSkills === 0 && (
-              <Card className="shadow-lg border-0 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/10 dark:to-purple-900/10 border-blue-200 dark:border-blue-700">
-                <CardHeader>
-                  <CardTitle className="flex items-center text-xl">
-                    <Lightbulb className="h-6 w-6 mr-3 text-blue-600" />
-                    Get Started with Barterly
-                  </CardTitle>
-                  <CardDescription>
-                    Welcome to the world of skill exchanges! Here's how to begin your journey.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Button
-                      onClick={() => window.location.href = '/profile'}
-                      className="h-20 flex-col bg-white dark:bg-slate-800 text-slate-900 dark:text-white border-2 border-blue-200 hover:border-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20"
-                      variant="outline"
-                    >
-                      <UserIcon className="h-6 w-6 mb-2 text-blue-600" />
-                      <span className="font-semibold">Complete Profile</span>
-                      <span className="text-xs text-slate-500">Add your info & bio</span>
-                    </Button>
-                    
-                    <Button
-                      onClick={() => window.location.href = '/skills'}
-                      className="h-20 flex-col bg-white dark:bg-slate-800 text-slate-900 dark:text-white border-2 border-green-200 hover:border-green-300 hover:bg-green-50 dark:hover:bg-green-900/20"
-                      variant="outline"
-                    >
-                      <BookOpen className="h-6 w-6 mb-2 text-green-600" />
-                      <span className="font-semibold">Add Skills</span>
-                      <span className="text-xs text-slate-500">What can you teach?</span>
-                    </Button>
-                  </div>
-                  
-                  <div className="mt-6 p-4 bg-white/60 dark:bg-slate-800/60 rounded-lg border border-blue-200 dark:border-blue-700">
-                    <h4 className="font-semibold text-slate-900 dark:text-white mb-2 flex items-center">
-                      <Heart className="h-4 w-4 mr-2 text-red-500" />
-                      How Barterly Works
-                    </h4>
-                    <ol className="text-sm text-slate-600 dark:text-slate-400 space-y-1">
-                      <li>1. Add skills you can teach and want to learn</li>
-                      <li>2. Find matches with people who complement your skills</li>
-                      <li>3. Chat and schedule skill exchange sessions</li>
-                      <li>4. Learn and teach in a supportive community</li>
-                    </ol>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
+            
             {/* Upcoming Sessions */}
-            <Card className="shadow-lg border-0 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm">
-              <CardHeader>
+            <Card className="border-0 shadow-sm bg-white/80 backdrop-blur-sm">
+              <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center text-xl">
-                    <Calendar className="h-6 w-6 mr-3 text-purple-600" />
-                    Upcoming Sessions
-                  </CardTitle>
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-xl flex items-center justify-center">
+                      <Calendar className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-xl text-slate-900">Upcoming Sessions</CardTitle>
+                      <CardDescription className="text-slate-600">Your scheduled learning sessions</CardDescription>
+                    </div>
+                  </div>
                   <Button 
-                    variant="outline" 
+                    variant="ghost" 
                     size="sm"
                     onClick={() => window.location.href = '/sessions'}
+                    className="text-slate-600 hover:text-slate-900"
                   >
-                    View All
-                    <ArrowRight className="h-4 w-4 ml-2" />
+                    View all
+                    <ChevronRight className="w-4 h-4 ml-1" />
                   </Button>
                 </div>
-                <CardDescription>
-                  Your scheduled skill exchange sessions
-                </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-4">
                 {upcomingSessions.length > 0 ? (
-                  <div className="space-y-4">
-                    {upcomingSessions.map((session) => {
-                      const sessionDate = new Date(session.scheduled_at)
-                      const partner = session.skill_match?.teacher_id === user?.id 
-                        ? session.skill_match?.learner 
-                        : session.skill_match?.teacher
-                      
-                      return (
-                        <div key={session.id} className="p-4 bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/10 dark:to-blue-900/10 rounded-xl border border-purple-200 dark:border-purple-700">
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <h4 className="font-semibold text-slate-900 dark:text-white mb-1">
-                                {session.title}
-                              </h4>
-                              <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">
-                                with {partner?.full_name || partner?.email?.split('@')[0]}
-                              </p>
-                              <div className="flex items-center gap-4 text-sm text-slate-500">
-                                <span className="flex items-center">
-                                  <Calendar className="h-3 w-3 mr-1" />
-                                  {sessionDate.toLocaleDateString()}
-                                </span>
-                                <span className="flex items-center">
-                                  <Clock className="h-3 w-3 mr-1" />
-                                  {sessionDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                </span>
-                                {session.meeting_url && (
-                                  <span className="flex items-center">
-                                    <Video className="h-3 w-3 mr-1" />
-                                    Online
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                            <div className="flex gap-2">
-                              <Button size="sm" variant="outline">
-                                <Eye className="h-3 w-3 mr-1" />
-                                View
-                              </Button>
-                              {session.meeting_url && (
-                                <Button 
-                                  size="sm"
-                                  onClick={() => window.open(session.meeting_url, '_blank')}
-                                >
-                                  <Video className="h-3 w-3 mr-1" />
-                                  Join
-                                </Button>
+                  upcomingSessions.map((session) => (
+                    <div key={session.id} className="group p-4 bg-slate-50/50 rounded-xl hover:bg-slate-50 transition-colors duration-200">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-4">
+                          <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
+                            <Video className="w-6 h-6 text-white" />
+                          </div>
+                          <div>
+                            <h4 className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors">
+                              {session.title}
+                            </h4>
+                            <div className="flex items-center space-x-3 mt-1">
+                              <span className="text-sm text-slate-600 flex items-center">
+                                <Clock className="w-3 h-3 mr-1" />
+                                {new Date(session.scheduled_at).toLocaleDateString()}
+                              </span>
+                              {session.skill_match?.skill && (
+                                <Badge variant="secondary" className="text-xs">
+                                  {session.skill_match.skill.name}
+                                </Badge>
                               )}
                             </div>
                           </div>
                         </div>
-                      )
-                    })}
-                  </div>
+                        <Button size="sm" variant="outline" className="opacity-0 group-hover:opacity-100 transition-opacity">
+                          <PlayCircle className="w-4 h-4 mr-1" />
+                          Join
+                        </Button>
+                      </div>
+                    </div>
+                  ))
                 ) : (
-                  <div className="text-center py-8">
-                    <Calendar className="h-12 w-12 text-slate-400 mx-auto mb-4" />
-                    <p className="text-slate-600 dark:text-slate-400 mb-4">
-                      No upcoming sessions scheduled
-                    </p>
-                    {stats.activeMatches > 0 ? (
-                      <Button 
-                        onClick={() => window.location.href = '/sessions'}
-                        variant="outline"
-                      >
-                        <Plus className="h-4 w-4 mr-2" />
-                        Schedule a Session
-                      </Button>
-                    ) : (
-                      <Button 
-                        onClick={() => window.location.href = '/skills'}
-                        variant="outline"
-                      >
-                        <BookOpen className="h-4 w-4 mr-2" />
-                        Find Skill Matches
-                      </Button>
-                    )}
+                  <div className="text-center py-12">
+                    <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Calendar className="w-8 h-8 text-slate-400" />
+                    </div>
+                    <h3 className="text-lg font-medium text-slate-900 mb-2">No upcoming sessions</h3>
+                    <p className="text-slate-600 mb-4">Schedule your first learning session to get started</p>
+                    <Button onClick={() => window.location.href = '/sessions'}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Schedule Session
+                    </Button>
                   </div>
                 )}
               </CardContent>
             </Card>
 
             {/* Recent Matches */}
-            <Card className="shadow-lg border-0 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm">
-              <CardHeader>
+            <Card className="border-0 shadow-sm bg-white/80 backdrop-blur-sm">
+              <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center text-xl">
-                    <Users className="h-6 w-6 mr-3 text-green-600" />
-                    Recent Matches
-                  </CardTitle>
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center">
+                      <Users className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-xl text-slate-900">Recent Matches</CardTitle>
+                      <CardDescription className="text-slate-600">Your latest skill connections</CardDescription>
+                    </div>
+                  </div>
                   <Button 
-                    variant="outline" 
+                    variant="ghost" 
                     size="sm"
                     onClick={() => window.location.href = '/skills'}
+                    className="text-slate-600 hover:text-slate-900"
                   >
-                    Find More
-                    <ArrowRight className="h-4 w-4 ml-2" />
+                    Find more
+                    <ChevronRight className="w-4 h-4 ml-1" />
                   </Button>
                 </div>
-                <CardDescription>
-                  Your latest skill exchange connections
-                </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-4">
                 {recentMatches.length > 0 ? (
-                  <div className="space-y-3">
-                    {recentMatches.map((match) => {
-                      const isTeacher = match.teacher_id === user?.id
-                      const partner = isTeacher ? match.learner : match.teacher
-                      
-                      return (
-                        <div key={match.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                  recentMatches.map((match) => {
+                    const partner = match.teacher_id === user?.id ? match.learner : match.teacher
+                    const isTeacher = match.teacher_id === user?.id
+                    
+                    return (
+                      <div key={match.id} className="group p-4 bg-slate-50/50 rounded-xl hover:bg-slate-50 transition-colors duration-200">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-4">
+                            <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold">
                               {partner?.full_name?.[0] || partner?.email?.[0]?.toUpperCase() || '?'}
                             </div>
                             <div>
-                              <h4 className="font-medium text-slate-900 dark:text-white">
-                                {partner?.full_name || partner?.email?.split('@')[0]}
+                              <h4 className="font-semibold text-slate-900">
+                                {partner?.full_name || partner?.email?.split('@')[0] || 'Unknown User'}
                               </h4>
-                              <p className="text-sm text-slate-600 dark:text-slate-400">
-                                {match.skill?.name} • {isTeacher ? 'Teaching' : 'Learning'}
-                              </p>
+                              <div className="flex items-center space-x-3 mt-1">
+                                <Badge variant={isTeacher ? "default" : "secondary"} className="text-xs">
+                                  {isTeacher ? 'Teaching' : 'Learning'} {match.skill?.name}
+                                </Badge>
+                                <Badge 
+                                  variant={match.status === 'accepted' ? 'default' : match.status === 'pending' ? 'secondary' : 'outline'}
+                                  className="text-xs"
+                                >
+                                  {match.status}
+                                </Badge>
+                              </div>
                             </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Badge variant={
-                              match.status === 'completed' ? 'default' :
-                              match.status === 'accepted' ? 'secondary' :
-                              match.status === 'pending' ? 'outline' : 'destructive'
-                            }>
-                              {match.status}
-                            </Badge>
-                            {match.status === 'accepted' && (
-                              <Button size="sm" variant="outline">
-                                <MessageCircle className="h-3 w-3 mr-1" />
-                                Chat
-                              </Button>
-                            )}
-                          </div>
+                          {match.status === 'accepted' && (
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              onClick={() => window.location.href = '/messages'}
+                              className="opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <MessageCircle className="w-4 h-4 mr-1" />
+                              Message
+                            </Button>
+                          )}
                         </div>
-                      )
-                    })}
-                  </div>
+                      </div>
+                    )
+                  })
                 ) : (
-                  <div className="text-center py-8">
-                    <Users className="h-12 w-12 text-slate-400 mx-auto mb-4" />
-                    <p className="text-slate-600 dark:text-slate-400 mb-4">
-                      No matches yet
-                    </p>
-                    <Button 
-                      onClick={() => window.location.href = '/skills'}
-                      variant="outline"
-                    >
-                      <BookOpen className="h-4 w-4 mr-2" />
-                      Browse Skills
+                  <div className="text-center py-12">
+                    <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Users className="w-8 h-8 text-slate-400" />
+                    </div>
+                    <h3 className="text-lg font-medium text-slate-900 mb-2">No matches yet</h3>
+                    <p className="text-slate-600 mb-4">Start connecting with teachers and learners</p>
+                    <Button onClick={() => window.location.href = '/skills'}>
+                      <Eye className="w-4 h-4 mr-2" />
+                      Explore Skills
                     </Button>
                   </div>
                 )}
@@ -540,126 +519,130 @@ export default function Dashboard() {
           </div>
 
           {/* Sidebar */}
-          <div className="lg:col-span-1 space-y-6">
-            {/* Profile Summary */}
-            <Card className="shadow-lg border-0 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm">
-              <CardHeader className="text-center pb-4">
-                <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center text-white text-xl font-bold mx-auto mb-3">
-                  {userProfile?.full_name?.[0] || user?.email?.[0]?.toUpperCase() || '?'}
+          <div className="space-y-8">
+            
+            {/* Profile Completion */}
+            <Card className="border-0 shadow-sm bg-gradient-to-br from-blue-50 to-purple-50 border border-blue-100">
+              <CardContent className="p-6">
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl flex items-center justify-center">
+                    <UserIcon className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-slate-900">Profile</h3>
+                    <p className="text-sm text-slate-600">Complete your profile</p>
+                  </div>
                 </div>
-                <CardTitle className="text-lg">
-                  {userProfile?.full_name || 'Complete your profile'}
-                </CardTitle>
-                <CardDescription>
-                  {userProfile?.location && (
-                    <span className="flex items-center justify-center text-sm">
-                      <MapPin className="h-3 w-3 mr-1" />
-                      {userProfile.location}
+                
+                <div className="space-y-3">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-600">Completion</span>
+                    <span className="font-medium text-slate-900">
+                      {userProfile?.bio && userProfile?.location ? '100%' : userProfile?.bio || userProfile?.location ? '75%' : '50%'}
                     </span>
+                  </div>
+                  <div className="w-full bg-slate-200 rounded-full h-2">
+                    <div 
+                      className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-500"
+                      style={{ 
+                        width: userProfile?.bio && userProfile?.location ? '100%' : userProfile?.bio || userProfile?.location ? '75%' : '50%' 
+                      }}
+                    ></div>
+                  </div>
+                  
+                  {(!userProfile?.bio || !userProfile?.location) && (
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => window.location.href = '/profile'}
+                      className="w-full mt-3 border-blue-200 text-blue-700 hover:bg-blue-50"
+                    >
+                      Complete Profile
+                      <ChevronRight className="w-4 h-4 ml-2" />
+                    </Button>
                   )}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="text-center">
-                {userProfile?.bio ? (
-                  <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
-                    {userProfile.bio}
-                  </p>
-                ) : (
-                  <p className="text-sm text-slate-500 italic mb-4">
-                    Add a bio to tell others about yourself
-                  </p>
-                )}
-                <Button 
-                  onClick={() => window.location.href = '/profile'}
-                  variant="outline" 
-                  size="sm" 
-                  className="w-full"
-                >
-                  <UserIcon className="h-4 w-4 mr-2" />
-                  View Profile
-                </Button>
+                </div>
               </CardContent>
             </Card>
 
             {/* Recent Activity */}
-            <Card className="shadow-lg border-0 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center text-lg">
-                  <Activity className="h-5 w-5 mr-2 text-blue-600" />
-                  Recent Activity
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {recentActivity.length > 0 ? (
-                  <div className="space-y-3">
-                    {recentActivity.map((activity) => (
-                      <div key={activity.id} className="flex items-start gap-3">
-                        <div className="mt-1">
-                          {getActivityIcon(activity.type)}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-slate-900 dark:text-white">
-                            {activity.title}
-                          </p>
-                          <p className="text-xs text-slate-600 dark:text-slate-400 truncate">
-                            {activity.description}
-                          </p>
-                          <p className="text-xs text-slate-500 mt-1">
-                            {formatTimeAgo(activity.timestamp)}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
+            <Card className="border-0 shadow-sm bg-white/80 backdrop-blur-sm">
+              <CardHeader className="pb-4">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center">
+                    <Activity className="w-5 h-5 text-white" />
                   </div>
+                  <div>
+                    <CardTitle className="text-lg text-slate-900">Recent Activity</CardTitle>
+                    <CardDescription className="text-slate-600">Your latest updates</CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {recentActivity.length > 0 ? (
+                  recentActivity.map((activity) => (
+                    <div key={activity.id} className="flex items-start space-x-3 p-3 rounded-lg hover:bg-slate-50 transition-colors">
+                      <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center mt-0.5">
+                        {getActivityIcon(activity.type)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-slate-900 truncate">
+                          {activity.title}
+                        </p>
+                        <p className="text-xs text-slate-600 mt-1 line-clamp-2">
+                          {activity.description}
+                        </p>
+                        <p className="text-xs text-slate-500 mt-1">
+                          {formatTimeAgo(activity.timestamp)}
+                        </p>
+                      </div>
+                    </div>
+                  ))
                 ) : (
-                  <div className="text-center py-6">
-                    <Activity className="h-8 w-8 text-slate-400 mx-auto mb-2" />
-                    <p className="text-sm text-slate-600 dark:text-slate-400">
-                      No recent activity
-                    </p>
+                  <div className="text-center py-8">
+                    <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <Activity className="w-6 h-6 text-slate-400" />
+                    </div>
+                    <p className="text-sm text-slate-600">No recent activity</p>
+                    <p className="text-xs text-slate-500 mt-1">Start learning to see your activity here</p>
                   </div>
                 )}
               </CardContent>
             </Card>
 
-            {/* Quick Links */}
-            <Card className="shadow-lg border-0 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm">
-              <CardHeader>
-                <CardTitle className="text-lg">Quick Actions</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Button 
-                  onClick={() => window.location.href = '/skills'}
-                  variant="outline" 
-                  size="sm" 
-                  className="w-full justify-start"
-                >
-                  <BookOpen className="h-4 w-4 mr-2" />
-                  Browse Skills
-                </Button>
-                <Button 
-                  onClick={() => window.location.href = '/messages'}
-                  variant="outline" 
-                  size="sm" 
-                  className="w-full justify-start"
-                  disabled={stats.activeMatches === 0}
-                >
-                  <MessageCircle className="h-4 w-4 mr-2" />
-                  Messages {stats.unreadMessages > 0 && (
-                    <Badge variant="destructive" className="ml-auto text-xs">
-                      {stats.unreadMessages}
-                    </Badge>
-                  )}
-                </Button>
-                <Button 
-                  onClick={() => window.location.href = '/sessions'}
-                  variant="outline" 
-                  size="sm" 
-                  className="w-full justify-start"
-                >
-                  <Calendar className="h-4 w-4 mr-2" />
-                  Schedule Session
-                </Button>
+            {/* Quick Tips */}
+            <Card className="border-0 shadow-sm bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-100">
+              <CardContent className="p-6">
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl flex items-center justify-center">
+                    <Lightbulb className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-slate-900">Quick Tip</h3>
+                    <p className="text-sm text-slate-600">Maximize your learning</p>
+                  </div>
+                </div>
+                
+                <div className="space-y-3">
+                  <p className="text-sm text-slate-700 leading-relaxed">
+                    {stats.totalSkills === 0 
+                      ? "Add your first skill to get started! Whether you're teaching or learning, skills are the foundation of great connections."
+                      : stats.activeMatches === 0
+                      ? "Ready to connect? Browse skills and send match requests to start learning from experienced teachers."
+                      : "Keep the momentum going! Schedule regular sessions and engage with your learning partners for the best results."
+                    }
+                  </p>
+                  
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => window.location.href = stats.totalSkills === 0 ? '/profile' : '/skills'}
+                    className="w-full border-amber-200 text-amber-700 hover:bg-amber-50"
+                  >
+                    {stats.totalSkills === 0 ? 'Add Skills' : stats.activeMatches === 0 ? 'Find Teachers' : 'Schedule Session'}
+                    <ChevronRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </div>
