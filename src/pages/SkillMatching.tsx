@@ -193,26 +193,22 @@ export default function SkillMatching() {
 
   const getCategoryIcon = (category: string) => {
     switch (category.toLowerCase()) {
-      case 'technology':
+      case 'programming':
         return '💻'
+      case 'design':
+        return '🎨'
+      case 'marketing':
+        return '📈'
+      case 'creative':
+        return '🎭'
       case 'languages':
         return '🌍'
-      case 'arts':
-        return '🎨'
-      case 'business':
-        return '💼'
-      case 'sports':
-        return '⚽'
+      case 'soft skills':
+        return '🤝'
       case 'music':
         return '🎵'
-      case 'cooking':
-        return '👨‍🍳'
-      case 'fitness':
-        return '💪'
-      case 'education':
-        return '📚'
-      case 'health':
-        return '🏥'
+      case 'lifestyle':
+        return '🌱'
       default:
         return '🎯'
     }

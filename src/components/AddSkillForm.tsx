@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { supabase, db } from '@/lib/supabase'
+import { supabase, db, type Skill } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -15,7 +15,8 @@ import {
   Lightbulb,
   Zap,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  ChevronDown
 } from 'lucide-react'
 
 interface AddSkillFormProps {
@@ -26,17 +27,14 @@ interface AddSkillFormProps {
 }
 
 const categories = [
-  { value: 'Technology', icon: '💻', color: 'from-blue-500 to-cyan-500' },
-  { value: 'Languages', icon: '🌍', color: 'from-green-500 to-emerald-500' },
-  { value: 'Arts', icon: '🎨', color: 'from-purple-500 to-pink-500' },
-  { value: 'Business', icon: '💼', color: 'from-slate-600 to-slate-700' },
-  { value: 'Sports', icon: '⚽', color: 'from-orange-500 to-red-500' },
-  { value: 'Music', icon: '🎵', color: 'from-indigo-500 to-purple-500' },
-  { value: 'Cooking', icon: '👨‍🍳', color: 'from-yellow-500 to-orange-500' },
-  { value: 'Fitness', icon: '💪', color: 'from-red-500 to-pink-500' },
-  { value: 'Education', icon: '📚', color: 'from-blue-600 to-indigo-600' },
-  { value: 'Health', icon: '🏥', color: 'from-green-600 to-teal-600' },
-  { value: 'Other', icon: '🎯', color: 'from-slate-500 to-slate-600' }
+  { value: 'Programming', icon: '💻', color: 'from-blue-500 to-cyan-500' },
+  { value: 'Design', icon: '🎨', color: 'from-purple-500 to-pink-500' },
+  { value: 'Marketing', icon: '📈', color: 'from-green-500 to-emerald-500' },
+  { value: 'Creative', icon: '🎭', color: 'from-orange-500 to-red-500' },
+  { value: 'Languages', icon: '🌍', color: 'from-indigo-500 to-purple-500' },
+  { value: 'Soft Skills', icon: '🤝', color: 'from-slate-600 to-slate-700' },
+  { value: 'Music', icon: '🎵', color: 'from-pink-500 to-rose-500' },
+  { value: 'Lifestyle', icon: '🌱', color: 'from-green-600 to-teal-600' }
 ]
 
 const proficiencyLevels = [
@@ -57,8 +55,11 @@ export default function AddSkillForm({ isOpen, onClose, onSkillAdded, defaultSki
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [messageType, setMessageType] = useState<'success' | 'error'>('success')
+  const [allSkills, setAllSkills] = useState<Skill[]>([])
+  const [filteredSkills, setFilteredSkills] = useState<Skill[]>([])
   
   const [formData, setFormData] = useState({
+    selectedSkillId: '',
     skillName: '',
     category: '',
     description: '',
@@ -72,10 +73,25 @@ export default function AddSkillForm({ isOpen, onClose, onSkillAdded, defaultSki
       const { data: { user } } = await supabase.auth.getUser()
       setUser(user)
     }
+    const loadSkills = async () => {
+      const skills = await db.getSkills()
+      setAllSkills(skills)
+    }
     if (isOpen) {
       getUser()
+      loadSkills()
     }
   }, [isOpen])
+
+  // Filter skills when category changes
+  useEffect(() => {
+    if (formData.category) {
+      const categorySkills = allSkills.filter(skill => skill.category === formData.category)
+      setFilteredSkills(categorySkills)
+    } else {
+      setFilteredSkills([])
+    }
+  }, [formData.category, allSkills])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -87,8 +103,12 @@ export default function AddSkillForm({ isOpen, onClose, onSkillAdded, defaultSki
     try {
       let skillId = ''
       
-      // Check if skill already exists or create new one
-      if (formData.isNewSkill) {
+      // Check if using existing skill or creating new one
+      if (formData.selectedSkillId) {
+        // Using existing skill
+        skillId = formData.selectedSkillId
+      } else if (formData.isNewSkill && formData.skillName && formData.category) {
+        // Creating new skill
         const newSkill = await db.createSkill({
           name: formData.skillName,
           category: formData.category,
@@ -100,8 +120,6 @@ export default function AddSkillForm({ isOpen, onClose, onSkillAdded, defaultSki
         }
         skillId = newSkill.id
       } else {
-        // For existing skills, we would need to find the skill ID
-        // This would require a skill search/selection component
         throw new Error('Please select an existing skill or create a new one')
       }
 
@@ -135,6 +153,7 @@ export default function AddSkillForm({ isOpen, onClose, onSkillAdded, defaultSki
 
   const resetForm = () => {
     setFormData({
+      selectedSkillId: '',
       skillName: '',
       category: '',
       description: '',
@@ -143,6 +162,7 @@ export default function AddSkillForm({ isOpen, onClose, onSkillAdded, defaultSki
       isNewSkill: false
     })
     setMessage('')
+    setFilteredSkills([])
   }
 
   const handleClose = () => {
@@ -246,21 +266,7 @@ export default function AddSkillForm({ isOpen, onClose, onSkillAdded, defaultSki
               </div>
             </div>
 
-            {/* Skill Name */}
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700">Skill Name *</label>
-              <Input
-                type="text"
-                placeholder="e.g., JavaScript, Spanish, Guitar, Cooking..."
-                value={formData.skillName}
-                onChange={(e) => setFormData(prev => ({ ...prev, skillName: e.target.value }))}
-                className="h-12 text-base border-slate-200 focus:border-blue-400 focus:ring-blue-400/20"
-                required
-              />
-              <p className="text-xs text-slate-500">Enter the specific skill you want to teach or learn</p>
-            </div>
-
-            {/* Category */}
+            {/* Category Selection */}
             <div className="space-y-3">
               <label className="text-sm font-semibold text-slate-700">Category *</label>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -268,7 +274,13 @@ export default function AddSkillForm({ isOpen, onClose, onSkillAdded, defaultSki
                   <button
                     key={category.value}
                     type="button"
-                    onClick={() => setFormData(prev => ({ ...prev, category: category.value, isNewSkill: true }))}
+                    onClick={() => setFormData(prev => ({ 
+                      ...prev, 
+                      category: category.value,
+                      selectedSkillId: '',
+                      skillName: '',
+                      isNewSkill: false
+                    }))}
                     className={`p-3 rounded-lg border-2 transition-all text-left ${
                       formData.category === category.value
                         ? 'border-blue-400 bg-blue-50 shadow-sm'
@@ -283,6 +295,72 @@ export default function AddSkillForm({ isOpen, onClose, onSkillAdded, defaultSki
                 ))}
               </div>
             </div>
+
+            {/* Skill Selection */}
+            {formData.category && (
+              <div className="space-y-3">
+                <label className="text-sm font-semibold text-slate-700">Select Skill *</label>
+                
+                {/* Existing Skills Dropdown */}
+                {filteredSkills.length > 0 && (
+                  <div className="space-y-2">
+                    <label className="text-xs text-slate-600">Choose from existing skills:</label>
+                    <select
+                      value={formData.selectedSkillId}
+                      onChange={(e) => setFormData(prev => ({ 
+                        ...prev, 
+                        selectedSkillId: e.target.value,
+                        skillName: '',
+                        isNewSkill: false
+                      }))}
+                      className="w-full h-12 px-4 border border-slate-200 rounded-lg focus:border-blue-400 focus:ring-blue-400/20 focus:outline-none bg-white"
+                    >
+                      <option value="">Select an existing skill...</option>
+                      {filteredSkills.map((skill) => (
+                        <option key={skill.id} value={skill.id}>
+                          {skill.name} {skill.description && `- ${skill.description.substring(0, 50)}...`}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* Add New Skill Option */}
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="addNewSkill"
+                      checked={formData.isNewSkill}
+                      onChange={(e) => setFormData(prev => ({ 
+                        ...prev, 
+                        isNewSkill: e.target.checked,
+                        selectedSkillId: e.target.checked ? '' : prev.selectedSkillId
+                      }))}
+                      className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
+                    />
+                    <label htmlFor="addNewSkill" className="text-sm text-slate-700">
+                      Add a new skill not in the list
+                    </label>
+                  </div>
+
+                  {/* New Skill Input */}
+                  {formData.isNewSkill && (
+                    <div className="space-y-2">
+                      <Input
+                        type="text"
+                        placeholder="Enter new skill name..."
+                        value={formData.skillName}
+                        onChange={(e) => setFormData(prev => ({ ...prev, skillName: e.target.value }))}
+                        className="h-12 text-base border-slate-200 focus:border-blue-400 focus:ring-blue-400/20"
+                        required
+                      />
+                      <p className="text-xs text-slate-500">This skill will be added to the {formData.category} category</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Proficiency Level */}
             <div className="space-y-3">
@@ -351,7 +429,7 @@ export default function AddSkillForm({ isOpen, onClose, onSkillAdded, defaultSki
             <div className="flex items-center space-x-4 pt-4">
               <Button
                 type="submit"
-                disabled={loading || !formData.skillName || !formData.category}
+                disabled={loading || !formData.category || (!formData.selectedSkillId && (!formData.isNewSkill || !formData.skillName))}
                 className="flex-1 h-12 text-base bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg"
               >
                 {loading ? (
