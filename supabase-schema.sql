@@ -35,7 +35,7 @@ CREATE TABLE public.user_skills (
     user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
     skill_id UUID REFERENCES public.skills(id) ON DELETE CASCADE,
     skill_type skill_type NOT NULL,
-    proficiency_level INTEGER CHECK (proficiency_level >= 1 AND proficiency_level <= 5),
+    proficiency_level INTEGER CHECK (proficiency_level >= 1 AND proficiency_level <= 10),
     description TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     UNIQUE(user_id, skill_id, skill_type)
