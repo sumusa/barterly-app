@@ -414,6 +414,24 @@ export const db = {
   },
 
   async getUserSessions(userId: string): Promise<Session[]> {
+    // First get all skill matches for the user
+    const { data: userMatches, error: matchError } = await supabase
+      .from('skill_matches')
+      .select('id')
+      .or(`teacher_id.eq.${userId},learner_id.eq.${userId}`)
+    
+    if (matchError) {
+      console.error('Error fetching user matches:', matchError)
+      return []
+    }
+    
+    if (!userMatches || userMatches.length === 0) {
+      return []
+    }
+    
+    const matchIds = userMatches.map(match => match.id)
+    
+    // Then get sessions for those matches
     const { data, error } = await supabase
       .from('sessions')
       .select(`
@@ -425,7 +443,7 @@ export const db = {
           skill:skills(*)
         )
       `)
-      .or(`skill_match.teacher_id.eq.${userId},skill_match.learner_id.eq.${userId}`, { foreignTable: 'skill_matches' })
+      .in('match_id', matchIds)
       .order('scheduled_at', { ascending: true })
     
     if (error) {
