@@ -35,6 +35,11 @@ export default function SkillMatching() {
   const [loading, setLoading] = useState(true)
   const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null)
   const [showAddSkillForm, setShowAddSkillForm] = useState(false)
+  const [skillMetrics, setSkillMetrics] = useState<Record<string, {
+    teacherCount: number
+    learnerCount: number
+    averageRating: number
+  }>>({})
 
   useEffect(() => {
     const getUser = async () => {
@@ -51,6 +56,20 @@ export default function SkillMatching() {
   const loadSkills = async () => {
     const skillsByCategory = await db.getSkillsByCategory()
     setSkills(skillsByCategory)
+    
+    // Load metrics for all skills
+    const allSkills = Object.values(skillsByCategory).flat()
+    const metricsPromises = allSkills.map(skill => 
+      db.getSkillMetrics(skill.id).then(metrics => ({ skillId: skill.id, metrics }))
+    )
+    
+    const metricsResults = await Promise.all(metricsPromises)
+    const metricsMap = metricsResults.reduce((acc, { skillId, metrics }) => {
+      acc[skillId] = metrics
+      return acc
+    }, {} as Record<string, { teacherCount: number; learnerCount: number; averageRating: number }>)
+    
+    setSkillMetrics(metricsMap)
     setLoading(false)
   }
 
@@ -88,20 +107,7 @@ export default function SkillMatching() {
     }
   }
 
-  const addUserSkill = async (skillId: string, skillType: 'teach' | 'learn', proficiencyLevel: number) => {
-    if (!user) return
-    
-    const userSkill = await db.addUserSkill({
-      user_id: user.id,
-      skill_id: skillId,
-      skill_type: skillType,
-      proficiency_level: proficiencyLevel
-    })
-    
-    if (userSkill) {
-      setUserSkills(prev => [...prev, userSkill])
-    }
-  }
+
 
   const createMatch = async (teacherId: string, skillId: string) => {
     if (!user) return
@@ -171,7 +177,6 @@ export default function SkillMatching() {
   }, {} as Record<string, Skill[]>)
 
   const totalSkills = Object.values(skills).flat().length
-  const totalTeachers = potentialMatches.length
 
   const getCategoryIcon = (category: string) => {
     switch (category.toLowerCase()) {
@@ -404,17 +409,19 @@ export default function SkillMatching() {
                             <div className="flex items-center space-x-4">
                               <div className="flex items-center space-x-1 text-slate-600">
                                 <Users className="w-4 h-4" />
-                                <span>{Math.floor(Math.random() * 50) + 10} teachers</span>
+                                <span>{skillMetrics[skill.id]?.teacherCount || 0} teachers</span>
                               </div>
                               <div className="flex items-center space-x-1 text-slate-600">
                                 <TrendingUp className="w-4 h-4" />
-                                <span>{Math.floor(Math.random() * 100) + 20} learners</span>
+                                <span>{skillMetrics[skill.id]?.learnerCount || 0} learners</span>
                               </div>
                             </div>
-                            <div className="flex items-center space-x-1">
-                              <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                              <span className="text-slate-600">{(Math.random() * 2 + 3).toFixed(1)}</span>
-                            </div>
+                            {skillMetrics[skill.id]?.averageRating > 0 && (
+                              <div className="flex items-center space-x-1">
+                                <Star className="w-4 h-4 text-yellow-500 fill-current" />
+                                <span className="text-slate-600">{skillMetrics[skill.id]?.averageRating.toFixed(1)}</span>
+                              </div>
+                            )}
                           </div>
 
                           {/* Action Buttons */}
@@ -429,7 +436,7 @@ export default function SkillMatching() {
                               className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-sm"
                             >
                               <Eye className="w-4 h-4 mr-2" />
-                              View Teachers
+                              View Teachers ({skillMetrics[skill.id]?.teacherCount || 0})
                             </Button>
                             {!userHasSkill && (
                               <Button
@@ -437,11 +444,12 @@ export default function SkillMatching() {
                                 variant="outline"
                                 onClick={(e) => {
                                   e.stopPropagation()
-                                  addUserSkill(skill.id, 'learn', 3)
+                                  setShowAddSkillForm(true)
                                 }}
-                                className="border-slate-200 hover:bg-slate-50"
+                                className="border-slate-200 hover:bg-slate-50 px-3"
                               >
-                                <Plus className="w-4 h-4" />
+                                <Plus className="w-4 h-4 mr-1" />
+                                Add
                               </Button>
                             )}
                           </div>

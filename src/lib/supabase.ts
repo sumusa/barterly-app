@@ -181,6 +181,43 @@ export const db = {
     return data
   },
 
+  async getSkillMetrics(skillId: string): Promise<{
+    teacherCount: number
+    learnerCount: number
+    averageRating: number
+  }> {
+    // Get teacher and learner counts
+    const { data: skillCounts, error: countsError } = await supabase
+      .from('user_skills')
+      .select('skill_type')
+      .eq('skill_id', skillId)
+
+    if (countsError) {
+      console.error('Error fetching skill counts:', countsError)
+      return { teacherCount: 0, learnerCount: 0, averageRating: 0 }
+    }
+
+    const teacherCount = skillCounts?.filter(s => s.skill_type === 'teach').length || 0
+    const learnerCount = skillCounts?.filter(s => s.skill_type === 'learn').length || 0
+
+    // Get average rating from reviews (if reviews table exists)
+    // For now, we'll calculate a mock rating based on teacher proficiency levels
+    const { data: teachers, error: teachersError } = await supabase
+      .from('user_skills')
+      .select('proficiency_level')
+      .eq('skill_id', skillId)
+      .eq('skill_type', 'teach')
+
+    let averageRating = 0
+    if (!teachersError && teachers && teachers.length > 0) {
+      const totalProficiency = teachers.reduce((sum, teacher) => sum + teacher.proficiency_level, 0)
+      // Convert proficiency (1-10) to rating (1-5)
+      averageRating = Math.round((totalProficiency / teachers.length / 2) * 10) / 10
+    }
+
+    return { teacherCount, learnerCount, averageRating }
+  },
+
   // User Skills
   async getUserSkills(userId: string): Promise<UserSkill[]> {
     const { data, error } = await supabase
