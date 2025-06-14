@@ -43,6 +43,61 @@ export default function Messages() {
     loadUserAndConversations()
   }, [])
 
+  // Set up real-time subscription for all messages to update unread counts
+  useEffect(() => {
+    if (!user || conversations.length === 0) return
+
+    const conversationIds = conversations.map(conv => conv.id)
+    
+    const channel = supabase
+      .channel('all-messages')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+        },
+        (payload) => {
+          const newMessage = payload.new as Message
+          
+          // Only handle messages for our conversations
+          if (conversationIds.includes(newMessage.match_id)) {
+            // If this message is for a conversation we're NOT currently viewing
+            if (selectedConversation?.id !== newMessage.match_id && newMessage.sender_id !== user.id) {
+              // Update the unread count for that conversation
+              setConversations(prev =>
+                prev.map(conv =>
+                  conv.id === newMessage.match_id
+                    ? { 
+                        ...conv, 
+                        unreadCount: (conv.unreadCount || 0) + 1,
+                        lastMessage: newMessage
+                      }
+                    : conv
+                )
+              )
+            }
+            // If it's for the currently selected conversation, update last message
+            else if (selectedConversation?.id === newMessage.match_id) {
+              setConversations(prev =>
+                prev.map(conv =>
+                  conv.id === newMessage.match_id
+                    ? { ...conv, lastMessage: newMessage }
+                    : conv
+                )
+              )
+            }
+          }
+        }
+      )
+      .subscribe()
+
+    return () => {
+      channel.unsubscribe()
+    }
+  }, [user, conversations, selectedConversation])
+
   useEffect(() => {
     if (selectedConversation) {
       loadMessages(selectedConversation.id)
@@ -62,6 +117,24 @@ export default function Messages() {
             const newMessage = payload.new as Message
             setMessages(prev => [...prev, newMessage])
             scrollToBottom()
+            
+            // If this is a message from another user, mark it as read immediately since we're viewing the conversation
+            if (newMessage.sender_id !== user?.id) {
+              supabase
+                .from('messages')
+                .update({ read_at: new Date().toISOString() })
+                .eq('id', newMessage.id)
+                .then(() => {
+                  // Update the message in state to reflect it's been read
+                  setMessages(prev => 
+                    prev.map(msg => 
+                      msg.id === newMessage.id 
+                        ? { ...msg, read_at: new Date().toISOString() }
+                        : msg
+                    )
+                  )
+                })
+            }
           }
         )
         .subscribe()
@@ -146,6 +219,15 @@ export default function Messages() {
               .from('messages')
               .update({ read_at: new Date().toISOString() })
               .eq('id', msg.id)
+          )
+        )
+        
+        // Update the conversation's unread count to 0
+        setConversations(prev =>
+          prev.map(conv =>
+            conv.id === matchId
+              ? { ...conv, unreadCount: 0 }
+              : conv
           )
         )
       }
