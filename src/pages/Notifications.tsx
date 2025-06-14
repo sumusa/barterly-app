@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { toast } from 'sonner'
 import { supabase, db, type Notification, type SkillMatch } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -105,11 +106,25 @@ export default function Notifications() {
         // Refresh notifications
         loadNotifications(user.id)
         
-        alert(response === 'accepted' ? 'Match request accepted! 🎉' : 'Match request declined.')
+        // Show success toast
+        if (response === 'accepted') {
+          toast.success('Match Request Accepted! 🎉', {
+            description: `You can now start messaging with ${updatedMatch.learner?.full_name || 'the learner'} about ${updatedMatch.skill?.name}`,
+            duration: 5000,
+          })
+        } else {
+          toast.info('Match Request Declined', {
+            description: `You declined the request to teach ${updatedMatch.skill?.name}`,
+            duration: 4000,
+          })
+        }
       }
     } catch (error) {
       console.error('Error responding to match:', error)
-      alert('Failed to respond to match request. Please try again.')
+      toast.error('Failed to respond to match request', {
+        description: 'Please try again or contact support if the problem persists.',
+        duration: 4000,
+      })
     } finally {
       setResponding(null)
     }

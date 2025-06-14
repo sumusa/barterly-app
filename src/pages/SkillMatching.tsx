@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { toast } from 'sonner'
 import { supabase, db, type Skill, type UserSkill } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -123,7 +124,10 @@ export default function SkillMatching() {
     
     // Prevent self-matching
     if (teacherId === user.id) {
-      alert('You cannot request a match with yourself!')
+      toast.error('Cannot request match with yourself', {
+        description: 'You cannot send a match request to yourself. Try finding other teachers for this skill.',
+        duration: 4000,
+      })
       return
     }
     
@@ -157,7 +161,10 @@ export default function SkillMatching() {
         })
         
         if (notification) {
-          alert('Match request sent! The teacher will be notified. 🎉')
+          toast.success('Match Request Sent! 🎉', {
+            description: `Your request to learn ${selectedSkill?.name} has been sent to the teacher. They'll be notified and can accept or decline.`,
+            duration: 5000,
+          })
           
           // Close dialogs
           setShowMessageDialog(false)
@@ -172,12 +179,18 @@ export default function SkillMatching() {
           // Trigger notification count refresh in navbar
           window.dispatchEvent(new CustomEvent('notificationUpdate'))
         } else {
-          alert('Match created but notification failed. The teacher may not be notified.')
+          toast.warning('Match created but notification failed', {
+            description: 'Your match request was created but the teacher may not be notified. You can try contacting them directly.',
+            duration: 5000,
+          })
         }
       }
     } catch (error) {
       console.error('Error creating match:', error)
-      alert('Failed to send match request. Please try again.')
+      toast.error('Failed to send match request', {
+        description: 'Something went wrong while sending your request. Please try again or contact support.',
+        duration: 4000,
+      })
     }
   }
 

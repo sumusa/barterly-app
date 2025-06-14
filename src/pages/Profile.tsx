@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { toast } from 'sonner'
 import { supabase, db, type User, type UserSkill, type SkillMatch } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -109,18 +110,37 @@ export default function Profile() {
       if (updatedProfile) {
         setUserProfile(updatedProfile)
         setIsEditing(false)
+        
+        toast.success('Profile Updated Successfully! 🎉', {
+          description: 'Your profile information has been saved and updated.',
+          duration: 4000,
+        })
       }
     } catch (error) {
       console.error('Error saving profile:', error)
+      toast.error('Failed to update profile', {
+        description: 'Something went wrong while saving your profile. Please try again.',
+        duration: 4000,
+      })
     } finally {
       setSaving(false)
     }
   }
 
   const removeSkill = async (skillId: string) => {
+    const skillToRemove = userSkills.find(s => s.id === skillId)
     const success = await db.removeUserSkill(skillId)
     if (success) {
       setUserSkills(prev => prev.filter(skill => skill.id !== skillId))
+      toast.success('Skill Removed', {
+        description: `${skillToRemove?.skill?.name || 'The skill'} has been removed from your profile.`,
+        duration: 3000,
+      })
+    } else {
+      toast.error('Failed to remove skill', {
+        description: 'Something went wrong while removing the skill. Please try again.',
+        duration: 4000,
+      })
     }
   }
 
@@ -144,9 +164,18 @@ export default function Profile() {
         ))
         setEditingSkill(null)
         setEditSkillData({ proficiency_level: 1, description: '' })
+        
+        toast.success('Skill Updated Successfully! ✨', {
+          description: `Your ${editingSkill.skill?.name} skill has been updated with new proficiency level and description.`,
+          duration: 4000,
+        })
       }
     } catch (error) {
       console.error('Error updating skill:', error)
+      toast.error('Failed to update skill', {
+        description: 'Something went wrong while updating your skill. Please try again.',
+        duration: 4000,
+      })
     } finally {
       setSaving(false)
     }

@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
+import { Toaster } from 'sonner'
 import { supabase } from '@/lib/supabase'
 import Navbar from '@/components/Navbar'
 import Landing from '@/pages/Landing'
@@ -98,6 +99,23 @@ function App() {
             )}
           </Routes>
         </div>
+        
+        {/* Toast Notifications */}
+        <Toaster 
+          position="top-right"
+          expand={true}
+          richColors={true}
+          closeButton={true}
+          toastOptions={{
+            style: {
+              background: 'rgba(255, 255, 255, 0.95)',
+              backdropFilter: 'blur(12px)',
+              border: '1px solid rgba(148, 163, 184, 0.2)',
+              borderRadius: '12px',
+              boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+            },
+          }}
+        />
       </div>
     </Router>
   )
