@@ -167,6 +167,20 @@ export const db = {
     }, {} as Record<string, Skill[]>)
   },
 
+  async createSkill(skill: Omit<Skill, 'id' | 'created_at'>): Promise<Skill | null> {
+    const { data, error } = await supabase
+      .from('skills')
+      .insert(skill)
+      .select('*')
+      .single()
+    
+    if (error) {
+      console.error('Error creating skill:', error)
+      return null
+    }
+    return data
+  },
+
   // User Skills
   async getUserSkills(userId: string): Promise<UserSkill[]> {
     const { data, error } = await supabase

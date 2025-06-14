@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import AddSkillForm from '@/components/AddSkillForm'
 import { 
   User as UserIcon, 
   Edit3, 
@@ -45,6 +46,7 @@ export default function Profile() {
   const [isEditing, setIsEditing] = useState(false)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [showAddSkillForm, setShowAddSkillForm] = useState(false)
   
   // Form state
   const [formData, setFormData] = useState({
@@ -463,7 +465,7 @@ export default function Profile() {
                     </div>
                   </div>
                   <Button 
-                    onClick={() => window.location.href = '/skills'}
+                    onClick={() => setShowAddSkillForm(true)}
                     className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
                   >
                     <Plus className="w-4 h-4 mr-2" />
@@ -556,7 +558,7 @@ export default function Profile() {
                     <h3 className="text-lg font-medium text-slate-900 mb-2">No skills added yet</h3>
                     <p className="text-slate-600 mb-4">Add your first skill to start connecting with other learners</p>
                     <Button 
-                      onClick={() => window.location.href = '/skills'}
+                      onClick={() => setShowAddSkillForm(true)}
                       className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
                     >
                       <Rocket className="w-4 h-4 mr-2" />
@@ -631,6 +633,13 @@ export default function Profile() {
           </div>
         </div>
       </div>
+
+      {/* Add Skill Form */}
+      <AddSkillForm
+        isOpen={showAddSkillForm}
+        onClose={() => setShowAddSkillForm(false)}
+        onSkillAdded={loadUserData}
+      />
     </div>
   )
 } 
