@@ -408,10 +408,6 @@ export default function Dashboard() {
                             </div>
                           </div>
                         </div>
-                        <Button size="sm" variant="outline" className="opacity-0 group-hover:opacity-100 transition-opacity">
-                          <PlayCircle className="w-4 h-4 mr-1" />
-                          Join
-                        </Button>
                       </div>
                     </div>
                   ))
