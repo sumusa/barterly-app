@@ -42,34 +42,34 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Alex Chen - Full-Stack Developer
-SELECT add_demo_user_skill('alex@demo.barterly.com', 'React', 'Programming', 'teach', 9, 'Expert in React with 5+ years of experience building complex applications');
-SELECT add_demo_user_skill('alex@demo.barterly.com', 'Node.js', 'Programming', 'teach', 8, 'Backend development with Express, APIs, and database integration');
-SELECT add_demo_user_skill('alex@demo.barterly.com', 'TypeScript', 'Programming', 'teach', 8, 'Strong typing for JavaScript applications');
-SELECT add_demo_user_skill('alex@demo.barterly.com', 'UI/UX Design', 'Design', 'learn', 4, 'Want to improve my design skills to create better user experiences');
+SELECT add_demo_user_skill('alex@demo.barterly.com', 'React', 'Programming', 'teach', 4, 'Expert in React with 5+ years of experience building complex applications');
+SELECT add_demo_user_skill('alex@demo.barterly.com', 'Node.js', 'Programming', 'teach', 3, 'Backend development with Express, APIs, and database integration');
+SELECT add_demo_user_skill('alex@demo.barterly.com', 'TypeScript', 'Programming', 'teach', 3, 'Strong typing for JavaScript applications');
+SELECT add_demo_user_skill('alex@demo.barterly.com', 'UI/UX Design', 'Design', 'learn', 2, 'Want to improve my design skills to create better user experiences');
 
 -- Sarah Johnson - UX Designer
-SELECT add_demo_user_skill('sarah@demo.barterly.com', 'Figma', 'Design', 'teach', 9, 'Professional UI/UX designer with expertise in design systems');
-SELECT add_demo_user_skill('sarah@demo.barterly.com', 'UI/UX Design', 'Design', 'teach', 9, 'Creating user-centered designs for web and mobile applications');
-SELECT add_demo_user_skill('sarah@demo.barterly.com', 'JavaScript', 'Programming', 'learn', 3, 'Learning to code to better collaborate with developers');
-SELECT add_demo_user_skill('sarah@demo.barterly.com', 'Photography', 'Creative', 'teach', 7, 'Portrait and product photography for design projects');
+SELECT add_demo_user_skill('sarah@demo.barterly.com', 'Figma', 'Design', 'teach', 4, 'Professional UI/UX designer with expertise in design systems');
+SELECT add_demo_user_skill('sarah@demo.barterly.com', 'UI/UX Design', 'Design', 'teach', 4, 'Creating user-centered designs for web and mobile applications');
+SELECT add_demo_user_skill('sarah@demo.barterly.com', 'JavaScript', 'Programming', 'learn', 1, 'Learning to code to better collaborate with developers');
+SELECT add_demo_user_skill('sarah@demo.barterly.com', 'Photography', 'Creative', 'teach', 3, 'Portrait and product photography for design projects');
 
 -- Marcus Rodriguez - Music Teacher
-SELECT add_demo_user_skill('marcus@demo.barterly.com', 'Guitar', 'Music', 'teach', 9, 'Professional guitarist with 15+ years of teaching experience');
-SELECT add_demo_user_skill('marcus@demo.barterly.com', 'Piano', 'Music', 'teach', 8, 'Classical and contemporary piano instruction');
-SELECT add_demo_user_skill('marcus@demo.barterly.com', 'Music Theory', 'Music', 'teach', 9, 'Comprehensive music theory from beginner to advanced levels');
-SELECT add_demo_user_skill('marcus@demo.barterly.com', 'Digital Marketing', 'Marketing', 'learn', 3, 'Want to promote my music teaching business online');
+SELECT add_demo_user_skill('marcus@demo.barterly.com', 'Guitar', 'Music', 'teach', 4, 'Professional guitarist with 15+ years of teaching experience');
+SELECT add_demo_user_skill('marcus@demo.barterly.com', 'Piano', 'Music', 'teach', 3, 'Classical and contemporary piano instruction');
+SELECT add_demo_user_skill('marcus@demo.barterly.com', 'Music Theory', 'Music', 'teach', 4, 'Comprehensive music theory from beginner to advanced levels');
+SELECT add_demo_user_skill('marcus@demo.barterly.com', 'Digital Marketing', 'Marketing', 'learn', 1, 'Want to promote my music teaching business online');
 
 -- Emma Wilson - Language Tutor
-SELECT add_demo_user_skill('emma@demo.barterly.com', 'Spanish', 'Languages', 'teach', 9, 'Native Spanish speaker with teaching certification');
-SELECT add_demo_user_skill('emma@demo.barterly.com', 'French', 'Languages', 'teach', 8, 'Fluent French speaker living in France for 3 years');
-SELECT add_demo_user_skill('emma@demo.barterly.com', 'Public Speaking', 'Soft Skills', 'teach', 7, 'Confident presenter and communication coach');
-SELECT add_demo_user_skill('emma@demo.barterly.com', 'HTML/CSS', 'Programming', 'learn', 2, 'Complete beginner wanting to build a website for my tutoring business');
+SELECT add_demo_user_skill('emma@demo.barterly.com', 'Spanish', 'Languages', 'teach', 4, 'Native Spanish speaker with teaching certification');
+SELECT add_demo_user_skill('emma@demo.barterly.com', 'French', 'Languages', 'teach', 3, 'Fluent French speaker living in France for 3 years');
+SELECT add_demo_user_skill('emma@demo.barterly.com', 'Public Speaking', 'Soft Skills', 'teach', 3, 'Confident presenter and communication coach');
+SELECT add_demo_user_skill('emma@demo.barterly.com', 'HTML/CSS', 'Programming', 'learn', 1, 'Complete beginner wanting to build a website for my tutoring business');
 
 -- David Kim - Marketing Specialist
-SELECT add_demo_user_skill('david@demo.barterly.com', 'SEO', 'Marketing', 'teach', 8, 'Search engine optimization specialist with proven results');
-SELECT add_demo_user_skill('david@demo.barterly.com', 'Social Media Marketing', 'Marketing', 'teach', 9, 'Expert in Instagram, TikTok, and LinkedIn marketing strategies');
-SELECT add_demo_user_skill('david@demo.barterly.com', 'Content Marketing', 'Marketing', 'teach', 8, 'Creating engaging content that converts');
-SELECT add_demo_user_skill('david@demo.barterly.com', 'Photography', 'Creative', 'learn', 4, 'Want to take better photos for marketing campaigns');
+SELECT add_demo_user_skill('david@demo.barterly.com', 'SEO', 'Marketing', 'teach', 3, 'Search engine optimization specialist with proven results');
+SELECT add_demo_user_skill('david@demo.barterly.com', 'Social Media Marketing', 'Marketing', 'teach', 4, 'Expert in Instagram, TikTok, and LinkedIn marketing strategies');
+SELECT add_demo_user_skill('david@demo.barterly.com', 'Content Marketing', 'Marketing', 'teach', 3, 'Creating engaging content that converts');
+SELECT add_demo_user_skill('david@demo.barterly.com', 'Photography', 'Creative', 'learn', 2, 'Want to take better photos for marketing campaigns');
 
 -- Update user profiles with more detailed information
 UPDATE public.users 

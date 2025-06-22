@@ -200,16 +200,16 @@ export default function Profile() {
   }
 
   const getProficiencyColor = (level: number) => {
-    if (level >= 8) return 'bg-gradient-to-r from-green-500 to-emerald-500'
-    if (level >= 6) return 'bg-gradient-to-r from-blue-500 to-cyan-500'
-    if (level >= 4) return 'bg-gradient-to-r from-yellow-500 to-orange-500'
+    if (level === 4) return 'bg-gradient-to-r from-green-500 to-emerald-500'
+    if (level === 3) return 'bg-gradient-to-r from-blue-500 to-cyan-500'
+    if (level === 2) return 'bg-gradient-to-r from-yellow-500 to-orange-500'
     return 'bg-gradient-to-r from-slate-400 to-slate-500'
   }
 
   const getProficiencyLabel = (level: number) => {
-    if (level >= 8) return 'Expert'
-    if (level >= 6) return 'Advanced'
-    if (level >= 4) return 'Intermediate'
+    if (level === 4) return 'Expert'
+    if (level === 3) return 'Advanced'
+    if (level === 2) return 'Intermediate'
     return 'Beginner'
   }
 
@@ -769,7 +769,7 @@ export default function Profile() {
                   <input
                     type="range"
                     min="1"
-                    max="10"
+                    max="4"
                     value={editSkillData.proficiency_level}
                     onChange={(e) => setEditSkillData({
                       ...editSkillData,
@@ -785,7 +785,7 @@ export default function Profile() {
                   </div>
                   <div className="text-center">
                     <div className={`inline-flex px-3 py-1 rounded-full text-sm text-white font-medium ${getProficiencyColor(editSkillData.proficiency_level)}`}>
-                      {getProficiencyLabel(editSkillData.proficiency_level)} ({editSkillData.proficiency_level}/10)
+                      {getProficiencyLabel(editSkillData.proficiency_level)} ({editSkillData.proficiency_level}/4)
                     </div>
                   </div>
                 </div>

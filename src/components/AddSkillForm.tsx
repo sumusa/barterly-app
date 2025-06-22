@@ -38,16 +38,10 @@ const categories = [
 ]
 
 const proficiencyLevels = [
-  { value: 1, label: 'Beginner', description: 'Just starting out', color: 'bg-slate-500' },
-  { value: 2, label: 'Novice', description: 'Basic understanding', color: 'bg-slate-500' },
-  { value: 3, label: 'Intermediate', description: 'Some experience', color: 'bg-yellow-500' },
-  { value: 4, label: 'Intermediate+', description: 'Good experience', color: 'bg-yellow-500' },
-  { value: 5, label: 'Advanced', description: 'Strong skills', color: 'bg-blue-500' },
-  { value: 6, label: 'Advanced+', description: 'Very strong skills', color: 'bg-blue-500' },
-  { value: 7, label: 'Expert', description: 'Professional level', color: 'bg-green-500' },
-  { value: 8, label: 'Expert+', description: 'Highly experienced', color: 'bg-green-500' },
-  { value: 9, label: 'Master', description: 'Industry expert', color: 'bg-green-600' },
-  { value: 10, label: 'Master+', description: 'World-class expert', color: 'bg-green-600' }
+  { value: 1, label: 'Beginner', description: 'Just starting out, basic knowledge', color: 'bg-slate-500' },
+  { value: 2, label: 'Intermediate', description: 'Some experience, comfortable with basics', color: 'bg-yellow-500' },
+  { value: 3, label: 'Advanced', description: 'Strong skills, can teach others', color: 'bg-blue-500' },
+  { value: 4, label: 'Expert', description: 'Professional level, industry expert', color: 'bg-green-500' }
 ]
 
 export default function AddSkillForm({ isOpen, onClose, onSkillAdded, defaultSkillType = 'learn' }: AddSkillFormProps) {
@@ -64,7 +58,7 @@ export default function AddSkillForm({ isOpen, onClose, onSkillAdded, defaultSki
     category: '',
     description: '',
     skillType: defaultSkillType,
-    proficiencyLevel: defaultSkillType === 'teach' ? 7 : 3,
+    proficiencyLevel: defaultSkillType === 'teach' ? 3 : 1,
     isNewSkill: false
   })
 
@@ -158,7 +152,7 @@ export default function AddSkillForm({ isOpen, onClose, onSkillAdded, defaultSki
       category: '',
       description: '',
       skillType: defaultSkillType,
-      proficiencyLevel: defaultSkillType === 'teach' ? 7 : 3,
+      proficiencyLevel: defaultSkillType === 'teach' ? 3 : 1,
       isNewSkill: false
     })
     setMessage('')
@@ -213,7 +207,7 @@ export default function AddSkillForm({ isOpen, onClose, onSkillAdded, defaultSki
                   onClick={() => setFormData(prev => ({ 
                     ...prev, 
                     skillType: 'teach',
-                    proficiencyLevel: prev.skillType === 'learn' ? 7 : prev.proficiencyLevel
+                    proficiencyLevel: prev.skillType === 'learn' ? 3 : prev.proficiencyLevel
                   }))}
                   className={`p-4 rounded-xl border-2 transition-all ${
                     formData.skillType === 'teach'
@@ -241,7 +235,7 @@ export default function AddSkillForm({ isOpen, onClose, onSkillAdded, defaultSki
                   onClick={() => setFormData(prev => ({ 
                     ...prev, 
                     skillType: 'learn',
-                    proficiencyLevel: prev.skillType === 'teach' ? 3 : prev.proficiencyLevel
+                    proficiencyLevel: prev.skillType === 'teach' ? 1 : prev.proficiencyLevel
                   }))}
                   className={`p-4 rounded-xl border-2 transition-all ${
                     formData.skillType === 'learn'
@@ -375,7 +369,7 @@ export default function AddSkillForm({ isOpen, onClose, onSkillAdded, defaultSki
                 <input
                   type="range"
                   min="1"
-                  max="10"
+                  max="4"
                   value={formData.proficiencyLevel}
                   onChange={(e) => setFormData(prev => ({ ...prev, proficiencyLevel: parseInt(e.target.value) }))}
                   className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer slider"
@@ -385,7 +379,7 @@ export default function AddSkillForm({ isOpen, onClose, onSkillAdded, defaultSki
                     className={`${proficiencyLevels[formData.proficiencyLevel - 1]?.color} text-white px-4 py-2`}
                   >
                     <Star className="w-4 h-4 mr-2" />
-                    {proficiencyLevels[formData.proficiencyLevel - 1]?.label} ({formData.proficiencyLevel}/10)
+                    {proficiencyLevels[formData.proficiencyLevel - 1]?.label}
                   </Badge>
                 </div>
                 <p className="text-xs text-slate-500 text-center">

@@ -75,16 +75,16 @@ export default function PublicProfile() {
   }
 
   const getProficiencyColor = (level: number) => {
-    if (level >= 8) return 'bg-gradient-to-r from-green-500 to-emerald-500'
-    if (level >= 6) return 'bg-gradient-to-r from-blue-500 to-cyan-500'
-    if (level >= 4) return 'bg-gradient-to-r from-yellow-500 to-orange-500'
+    if (level === 4) return 'bg-gradient-to-r from-green-500 to-emerald-500'
+    if (level === 3) return 'bg-gradient-to-r from-blue-500 to-cyan-500'
+    if (level === 2) return 'bg-gradient-to-r from-yellow-500 to-orange-500'
     return 'bg-gradient-to-r from-slate-400 to-slate-500'
   }
 
   const getProficiencyLabel = (level: number) => {
-    if (level >= 8) return 'Expert'
-    if (level >= 6) return 'Advanced'
-    if (level >= 4) return 'Intermediate'
+    if (level === 4) return 'Expert'
+    if (level === 3) return 'Advanced'
+    if (level === 2) return 'Intermediate'
     return 'Beginner'
   }
 
