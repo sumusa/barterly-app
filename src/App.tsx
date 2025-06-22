@@ -4,6 +4,11 @@ import { Toaster } from 'sonner'
 import { supabase } from '@/lib/supabase'
 import Navbar from '@/components/Navbar'
 import Landing from '@/pages/Landing'
+import Features from '@/pages/Features'
+import HowItWorks from '@/pages/HowItWorks'
+import TermsOfUse from '@/pages/TermsOfUse'
+import SuccessStories from '@/pages/SuccessStories'
+import HelpCenter from '@/pages/HelpCenter'
 import Dashboard from '@/pages/Dashboard'
 import SkillMatching from '@/pages/SkillMatching'
 import Matches from '@/pages/Matches'
@@ -75,6 +80,11 @@ function App() {
               path="/" 
               element={user ? <Navigate to="/dashboard" replace /> : <Landing />} 
             />
+            <Route path="/features" element={<Features />} />
+            <Route path="/how-it-works" element={<HowItWorks />} />
+            <Route path="/terms-of-use" element={<TermsOfUse />} />
+            <Route path="/success-stories" element={<SuccessStories />} />
+            <Route path="/help" element={<HelpCenter />} />
             
             {/* Protected Routes */}
             {user ? (

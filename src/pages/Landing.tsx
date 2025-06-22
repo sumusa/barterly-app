@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -375,9 +376,9 @@ export default function LandingPage() {
               <h4 className="text-lg font-semibold text-white">Platform</h4>
               <ul className="space-y-3">
                 <li>
-                  <a href="#features" className="text-slate-300 hover:text-white transition-colors duration-200">
+                  <Link to="/features" className="text-slate-300 hover:text-white transition-colors duration-200">
                     Features
-                  </a>
+                  </Link>
                 </li>
                 <li>
                   <a href="#auth-section" className="text-slate-300 hover:text-white transition-colors duration-200">
@@ -385,14 +386,14 @@ export default function LandingPage() {
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="text-slate-300 hover:text-white transition-colors duration-200">
+                  <Link to="/how-it-works" className="text-slate-300 hover:text-white transition-colors duration-200">
                     How It Works
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a href="#" className="text-slate-300 hover:text-white transition-colors duration-200">
+                  <Link to="/success-stories" className="text-slate-300 hover:text-white transition-colors duration-200">
                     Success Stories
-                  </a>
+                  </Link>
                 </li>
               </ul>
             </div>
@@ -402,24 +403,19 @@ export default function LandingPage() {
               <h4 className="text-lg font-semibold text-white">Support</h4>
               <ul className="space-y-3">
                 <li>
-                  <a href="#" className="text-slate-300 hover:text-white transition-colors duration-200">
+                  <Link to="/help" className="text-slate-300 hover:text-white transition-colors duration-200">
                     Help Center
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a href="#" className="text-slate-300 hover:text-white transition-colors duration-200">
+                  <a href="mailto:your.email@example.com" className="text-slate-300 hover:text-white transition-colors duration-200">
                     Contact Us
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="text-slate-300 hover:text-white transition-colors duration-200">
-                    Privacy Policy
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="text-slate-300 hover:text-white transition-colors duration-200">
-                    Terms of Service
-                  </a>
+                  <Link to="/terms-of-use" className="text-slate-300 hover:text-white transition-colors duration-200">
+                    Terms of Use
+                  </Link>
                 </li>
               </ul>
             </div>
@@ -438,7 +434,7 @@ export default function LandingPage() {
                 <Heart className="w-4 h-4 text-red-500 fill-current" />
                 <span>by</span>
                 <a 
-                  href="https://github.com/yourusername" 
+                  href="https://github.com/sumusa" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="font-semibold text-blue-400 hover:text-blue-300 transition-colors duration-200"
