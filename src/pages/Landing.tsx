@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import DemoLogin from '@/components/DemoLogin'
 import { 
   Users, 
   MessageCircle, 
@@ -14,8 +15,8 @@ import {
   Globe,
   Shield,
   CheckCircle,
-  PlayCircle,
-  Sparkles
+  Sparkles,
+  TestTube
 } from 'lucide-react'
 
 export default function LandingPage() {
@@ -24,6 +25,7 @@ export default function LandingPage() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
+  const [showDemoLogin, setShowDemoLogin] = useState(false)
 
   const handleAuth = async (type: 'signup' | 'signin') => {
     setLoading(true)
@@ -97,10 +99,11 @@ export default function LandingPage() {
                   <Button 
                     variant="outline" 
                     size="lg" 
+                    onClick={() => setShowDemoLogin(true)}
                     className="text-lg px-8 py-6 border-2 hover:bg-slate-50 transition-all duration-200"
                   >
-                    <PlayCircle className="mr-2 h-5 w-5" />
-                    Watch Demo
+                    <TestTube className="mr-2 h-5 w-5" />
+                    Try Demo
                   </Button>
                 </div>
 
@@ -190,7 +193,7 @@ export default function LandingPage() {
                     )}
                   </Button>
 
-                  <div className="text-center pt-2">
+                  <div className="text-center pt-2 space-y-3">
                     <button
                       onClick={() => setIsSigningUp(!isSigningUp)}
                       className="text-sm text-blue-600 hover:text-blue-700 hover:underline transition-colors font-medium"
@@ -200,6 +203,17 @@ export default function LandingPage() {
                         : "Don't have an account? Sign up"
                       }
                     </button>
+                    
+                    <div className="border-t border-slate-200 pt-3">
+                      <Button
+                        variant="outline"
+                        onClick={() => setShowDemoLogin(true)}
+                        className="w-full border-slate-300 hover:bg-slate-50"
+                      >
+                        <TestTube className="w-4 h-4 mr-2" />
+                        Try Demo Accounts
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -307,6 +321,11 @@ export default function LandingPage() {
           </Button>
         </div>
       </div>
+
+      {/* Demo Login Modal */}
+      {showDemoLogin && (
+        <DemoLogin onClose={() => setShowDemoLogin(false)} />
+      )}
     </div>
   )
 } 
