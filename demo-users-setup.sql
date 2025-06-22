@@ -9,34 +9,34 @@ CREATE OR REPLACE FUNCTION add_demo_user_skill(
   user_email TEXT,
   skill_name TEXT,
   skill_category TEXT,
-  skill_type skill_type,
+  skill_type_param skill_type,
   proficiency_level INTEGER,
   description TEXT DEFAULT NULL
 ) RETURNS VOID AS $$
 DECLARE
-  user_id UUID;
-  skill_id UUID;
+  found_user_id UUID;
+  found_skill_id UUID;
 BEGIN
   -- Get user ID from email
-  SELECT id INTO user_id FROM public.users WHERE email = user_email;
+  SELECT id INTO found_user_id FROM public.users WHERE email = user_email;
   
   -- Skip if user doesn't exist
-  IF user_id IS NULL THEN
+  IF found_user_id IS NULL THEN
     RETURN;
   END IF;
   
   -- Get or create skill
-  SELECT id INTO skill_id FROM public.skills WHERE name = skill_name AND category = skill_category;
+  SELECT id INTO found_skill_id FROM public.skills WHERE name = skill_name AND category = skill_category;
   
-  IF skill_id IS NULL THEN
+  IF found_skill_id IS NULL THEN
     INSERT INTO public.skills (name, category, description)
     VALUES (skill_name, skill_category, description)
-    RETURNING id INTO skill_id;
+    RETURNING id INTO found_skill_id;
   END IF;
   
   -- Add user skill (ignore if already exists)
   INSERT INTO public.user_skills (user_id, skill_id, skill_type, proficiency_level, description)
-  VALUES (user_id, skill_id, skill_type, proficiency_level, description)
+  VALUES (found_user_id, found_skill_id, skill_type_param, proficiency_level, description)
   ON CONFLICT (user_id, skill_id, skill_type) DO NOTHING;
 END;
 $$ LANGUAGE plpgsql;
