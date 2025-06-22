@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import AddSkillForm from '@/components/AddSkillForm'
 import { 
   User as UserIcon, 
@@ -292,7 +293,16 @@ export default function Profile() {
                       </span>
                     </div>
                     <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center border-4 border-white">
-                      <Camera className="w-5 h-5 text-slate-600" />
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button className="w-full h-full flex items-center justify-center hover:bg-slate-50 rounded-full transition-colors">
+                            <Camera className="w-5 h-5 text-slate-600" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Upload profile photo</p>
+                        </TooltipContent>
+                      </Tooltip>
                     </div>
                     <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center shadow-lg">
                       <CheckCircle className="w-5 h-5 text-white" />
@@ -555,22 +565,36 @@ export default function Profile() {
                               )}
                             </div>
                             <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity ml-2 flex-shrink-0">
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => openEditSkill(skill)}
-                                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 h-8 w-8 p-0"
-                              >
-                                <Edit3 className="w-4 h-4" />
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => removeSkill(skill.id)}
-                                className="text-red-600 hover:text-red-700 hover:bg-red-50 h-8 w-8 p-0"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => openEditSkill(skill)}
+                                    className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 h-8 w-8 p-0"
+                                  >
+                                    <Edit3 className="w-4 h-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Edit skill details</p>
+                                </TooltipContent>
+                              </Tooltip>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => removeSkill(skill.id)}
+                                    className="text-red-600 hover:text-red-700 hover:bg-red-50 h-8 w-8 p-0"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Remove skill</p>
+                                </TooltipContent>
+                              </Tooltip>
                             </div>
                           </div>
                         </div>
@@ -605,22 +629,36 @@ export default function Profile() {
                               )}
                             </div>
                             <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity ml-2 flex-shrink-0">
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => openEditSkill(skill)}
-                                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 h-8 w-8 p-0"
-                              >
-                                <Edit3 className="w-4 h-4" />
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => removeSkill(skill.id)}
-                                className="text-red-600 hover:text-red-700 hover:bg-red-50 h-8 w-8 p-0"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => openEditSkill(skill)}
+                                    className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 h-8 w-8 p-0"
+                                  >
+                                    <Edit3 className="w-4 h-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Edit skill details</p>
+                                </TooltipContent>
+                              </Tooltip>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => removeSkill(skill.id)}
+                                    className="text-red-600 hover:text-red-700 hover:bg-red-50 h-8 w-8 p-0"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Remove skill</p>
+                                </TooltipContent>
+                              </Tooltip>
                             </div>
                           </div>
                         </div>

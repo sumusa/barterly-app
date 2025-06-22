@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import AddSkillForm from '@/components/AddSkillForm'
 import { 
   Search, 
@@ -669,11 +670,18 @@ export default function SkillMatching() {
                               <MessageCircle className="w-4 h-4 mr-2" />
                               Learn from {teacher.user.full_name?.split(' ')[0] || 'Teacher'}
                             </Button>
-                            <Link to={`/profile/${teacher.user.id}`}>
-                              <Button size="sm" variant="outline">
-                                <Eye className="w-4 h-4" />
-                              </Button>
-                            </Link>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Link to={`/profile/${teacher.user.id}`}>
+                                  <Button size="sm" variant="outline">
+                                    <Eye className="w-4 h-4" />
+                                  </Button>
+                                </Link>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>View Profile</p>
+                              </TooltipContent>
+                            </Tooltip>
                           </>
                         )}
                       </div>

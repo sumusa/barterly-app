@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { 
   X, 
   Plus, 
@@ -371,12 +372,19 @@ export default function AddSkillForm({ isOpen, onClose, onSkillAdded, defaultSki
                   className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer slider"
                 />
                 <div className="flex items-center justify-center">
-                  <Badge 
-                    className={`${proficiencyLevels[formData.proficiencyLevel - 1]?.color} text-white px-4 py-2`}
-                  >
-                    <Star className="w-4 h-4 mr-2" />
-                    {proficiencyLevels[formData.proficiencyLevel - 1]?.label}
-                  </Badge>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Badge 
+                        className={`${proficiencyLevels[formData.proficiencyLevel - 1]?.color} text-white px-4 py-2 cursor-help`}
+                      >
+                        <Star className="w-4 h-4 mr-2" />
+                        {proficiencyLevels[formData.proficiencyLevel - 1]?.label}
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>This indicates your current skill level</p>
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
                 <p className="text-xs text-slate-500 text-center">
                   {proficiencyLevels[formData.proficiencyLevel - 1]?.description}

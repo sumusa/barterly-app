@@ -4,6 +4,7 @@ import { supabase, db, type User, type SkillMatch, type Session } from '@/lib/su
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { 
   Users, 
   BookOpen, 
@@ -514,10 +515,17 @@ export default function Dashboard() {
                     </div>
                     <h3 className="text-lg font-medium text-slate-900 mb-2">No matches yet</h3>
                     <p className="text-slate-600 mb-4">Start connecting with teachers and learners</p>
-                    <Button onClick={() => navigate('/skills')}>
-                      <Eye className="w-4 h-4 mr-2" />
-                      Explore Skills
-                    </Button>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button onClick={() => navigate('/teachers')}>
+                          <Eye className="w-4 h-4 mr-2" />
+                          Explore Teachers
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Browse available teachers and skills</p>
+                      </TooltipContent>
+                    </Tooltip>
                   </div>
                 )}
               </CardContent>

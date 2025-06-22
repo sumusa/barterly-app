@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { 
   Calendar, 
   Clock, 
@@ -451,64 +452,106 @@ export default function Sessions() {
                             <div className="flex items-center gap-2 ml-4">
                               {session.status === 'scheduled' && isUpcoming && (
                                 <>
-                                  <Button
-                                    size="sm"
-                                    onClick={() => handleStatusUpdate(session.id, 'in_progress')}
-                                    className="bg-green-600 hover:bg-green-700"
-                                  >
-                                    <Play className="h-3 w-3 mr-1" />
-                                    Mark Started
-                                  </Button>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button
+                                        size="sm"
+                                        onClick={() => handleStatusUpdate(session.id, 'in_progress')}
+                                        className="bg-green-600 hover:bg-green-700"
+                                      >
+                                        <Play className="h-3 w-3 mr-1" />
+                                        Mark Started
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>Start the session</p>
+                                    </TooltipContent>
+                                  </Tooltip>
                                   
                                   {session.meeting_url && (
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={() => window.open(session.meeting_url, '_blank')}
-                                    >
-                                      <Video className="h-3 w-3 mr-1" />
-                                      Open Meeting
-                                    </Button>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          onClick={() => window.open(session.meeting_url, '_blank')}
+                                        >
+                                          <Video className="h-3 w-3 mr-1" />
+                                          Open Meeting
+                                        </Button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p>Join video meeting</p>
+                                      </TooltipContent>
+                                    </Tooltip>
                                   )}
                                 </>
                               )}
                               
                               {session.status === 'in_progress' && (
-                                <Button
-                                  size="sm"
-                                  onClick={() => handleStatusUpdate(session.id, 'completed')}
-                                  className="bg-purple-600 hover:bg-purple-700"
-                                >
-                                  <CheckCircle className="h-3 w-3 mr-1" />
-                                  Complete
-                                </Button>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      size="sm"
+                                      onClick={() => handleStatusUpdate(session.id, 'completed')}
+                                      className="bg-purple-600 hover:bg-purple-700"
+                                    >
+                                      <CheckCircle className="h-3 w-3 mr-1" />
+                                      Complete
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>Mark session as completed</p>
+                                  </TooltipContent>
+                                </Tooltip>
                               )}
                               
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => navigate('/messages')}
-                              >
-                                <MessageCircle className="h-3 w-3 mr-1" />
-                                Chat
-                              </Button>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => navigate('/messages')}
+                                  >
+                                    <MessageCircle className="h-3 w-3 mr-1" />
+                                    Chat
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Open chat with partner</p>
+                                </TooltipContent>
+                              </Tooltip>
                               
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => startEditSession(session)}
-                              >
-                                <Edit3 className="h-4 w-4" />
-                              </Button>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => startEditSession(session)}
+                                  >
+                                    <Edit3 className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Edit session details</p>
+                                </TooltipContent>
+                              </Tooltip>
                               
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => handleDeleteSession(session.id)}
-                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => handleDeleteSession(session.id)}
+                                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Delete session</p>
+                                </TooltipContent>
+                              </Tooltip>
                             </div>
                           </div>
                         </div>

@@ -90,7 +90,7 @@ function App() {
             {user ? (
               <>
                 <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/skills" element={<SkillMatching />} />
+                <Route path="/teachers" element={<SkillMatching />} />
                 <Route path="/matches" element={<Matches />} />
                 <Route path="/messages" element={<Messages />} />
                 <Route path="/sessions" element={<Sessions />} />

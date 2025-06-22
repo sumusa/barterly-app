@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import ReviewForm from '@/components/ReviewForm'
 import { 
   Search,
@@ -417,12 +418,19 @@ export default function Matches() {
                           </div>
                         ) : match.status === 'completed' ? (
                           <div className="flex items-center space-x-2">
-                            <Link to={`/profile/${partner?.id}`}>
-                              <Button size="sm" variant="outline">
-                                <Eye className="h-4 w-4 mr-1" />
-                                View Profile
-                              </Button>
-                            </Link>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Link to={`/profile/${partner?.id}`}>
+                                  <Button size="sm" variant="outline">
+                                    <Eye className="h-4 w-4 mr-1" />
+                                    View Profile
+                                  </Button>
+                                </Link>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>View user's full profile</p>
+                              </TooltipContent>
+                            </Tooltip>
                             {/* Review Prompt for Completed Sessions */}
                             {(() => {
                               const session = completedSessions.find(s => s.skill_match?.id === match.id)
@@ -450,12 +458,19 @@ export default function Matches() {
                             Waiting for response
                           </Badge>
                         ) : (
-                          <Link to={`/profile/${partner?.id}`}>
-                            <Button size="sm" variant="outline">
-                              <Eye className="h-4 w-4 mr-1" />
-                              View Profile
-                            </Button>
-                          </Link>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Link to={`/profile/${partner?.id}`}>
+                                <Button size="sm" variant="outline">
+                                  <Eye className="h-4 w-4 mr-1" />
+                                  View Profile
+                                </Button>
+                              </Link>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>View user's full profile</p>
+                            </TooltipContent>
+                          </Tooltip>
                         )}
                       </div>
                     </div>

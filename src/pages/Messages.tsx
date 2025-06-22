@@ -4,6 +4,7 @@ import { supabase, db, type SkillMatch, type Message } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { 
   MessageCircle, 
   Send, 
@@ -488,14 +489,28 @@ export default function Messages() {
                     </div>
                     
                     <div className="flex items-center gap-2">
-                      <Link to="/sessions">
-                        <Button size="sm" variant="outline" title="Schedule Session">
-                          <Calendar className="h-4 w-4" />
-                        </Button>
-                      </Link>
-                      <Button size="sm" variant="ghost" title="More Options">
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Link to="/sessions">
+                            <Button size="sm" variant="outline">
+                              <Calendar className="h-4 w-4" />
+                            </Button>
+                          </Link>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Schedule a session</p>
+                        </TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button size="sm" variant="ghost">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>More options</p>
+                        </TooltipContent>
+                      </Tooltip>
                     </div>
                   </div>
                 </CardHeader>
@@ -597,17 +612,24 @@ export default function Messages() {
                       />
                     </div>
                     
-                    <Button 
-                      onClick={sendMessage} 
-                      disabled={!newMessage.trim() || sending}
-                      className="h-[44px] px-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-                    >
-                      {sending ? (
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      ) : (
-                        <Send className="h-4 w-4" />
-                      )}
-                    </Button>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          onClick={sendMessage} 
+                          disabled={!newMessage.trim() || sending}
+                          className="h-[44px] px-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                        >
+                          {sending ? (
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                          ) : (
+                            <Send className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Send message</p>
+                      </TooltipContent>
+                    </Tooltip>
                   </div>
                   
                   <div className="mt-2 text-xs text-slate-500">
