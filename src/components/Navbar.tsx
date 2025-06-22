@@ -192,20 +192,6 @@ export default function Navbar() {
                         <p className="text-xs text-slate-500">Manage your information</p>
                       </div>
                     </Link>
-
-                    <Link
-                      to="/settings"
-                      onClick={() => setIsDropdownOpen(false)}
-                      className="flex items-center space-x-3 px-4 py-2 text-slate-700 hover:bg-slate-50 transition-colors"
-                    >
-                      <div className="w-8 h-8 bg-purple-50 rounded-lg flex items-center justify-center">
-                        <Settings className="w-4 h-4 text-purple-600" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">Settings</p>
-                        <p className="text-xs text-slate-500">Preferences & privacy</p>
-                      </div>
-                    </Link>
                   </div>
 
                   {/* Sign Out */}
