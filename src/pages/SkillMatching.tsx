@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
-import { supabase, db, type Skill, type UserSkill } from '@/lib/supabase'
+import { supabase, db, type Skill, type UserSkill, type User } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
@@ -12,19 +12,24 @@ import {
   Users, 
   Star, 
   Plus,
-  BookOpen, 
   Grid,
   List,
-  TrendingUp,
   MapPin,
   Filter,
   Sparkles,
   GraduationCap,
-  UserCheck,
   Send,
   Eye,
-  Target
+  MessageCircle,
 } from 'lucide-react'
+
+interface TeacherWithSkills {
+  user: User
+  skills: UserSkill[]
+  averageRating: number
+  totalReviews: number
+  totalStudents: number
+}
 
 export default function SkillMatching() {
   const [user, setUser] = useState<any>(null)
@@ -32,185 +37,170 @@ export default function SkillMatching() {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
-  const [userSkills, setUserSkills] = useState<UserSkill[]>([])
-  const [potentialMatches, setPotentialMatches] = useState<UserSkill[]>([])
+  const [teachers, setTeachers] = useState<TeacherWithSkills[]>([])
   const [loading, setLoading] = useState(true)
-  const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null)
   const [showAddSkillForm, setShowAddSkillForm] = useState(false)
   const [showMessageDialog, setShowMessageDialog] = useState(false)
-  const [selectedTeacher, setSelectedTeacher] = useState<UserSkill | null>(null)
+  const [selectedTeacher, setSelectedTeacher] = useState<TeacherWithSkills | null>(null)
   const [customMessage, setCustomMessage] = useState('')
-  const [skillMetrics, setSkillMetrics] = useState<Record<string, {
-    teacherCount: number
-    learnerCount: number
-    averageRating: number
-  }>>({})
+  const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null)
 
   useEffect(() => {
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       setUser(user)
-      if (user) {
-        loadUserSkills(user.id)
-      }
     }
     getUser()
     loadSkills()
+    loadTeachers()
   }, [])
 
   const loadSkills = async () => {
     const skillsByCategory = await db.getSkillsByCategory()
     setSkills(skillsByCategory)
-    
-    // Load metrics for all skills
-    const allSkills = Object.values(skillsByCategory).flat()
-    const metricsPromises = allSkills.map(skill => 
-      db.getSkillMetrics(skill.id).then(metrics => ({ skillId: skill.id, metrics }))
-    )
-    
-    const metricsResults = await Promise.all(metricsPromises)
-    const metricsMap = metricsResults.reduce((acc, { skillId, metrics }) => {
-      acc[skillId] = metrics
-      return acc
-    }, {} as Record<string, { teacherCount: number; learnerCount: number; averageRating: number }>)
-    
-    setSkillMetrics(metricsMap)
-    setLoading(false)
+  }
+
+  const loadTeachers = async () => {
+    try {
+      // Get all teachers with their skills
+      const { data: teacherSkills, error } = await supabase
+        .from('user_skills')
+        .select(`
+          *,
+          user:users(*),
+          skill:skills(*)
+        `)
+        .eq('skill_type', 'teach')
+        .order('proficiency_level', { ascending: false })
+
+      if (error) {
+        console.error('Error loading teachers:', error)
+        return
+      }
+
+      // Group teachers by user and calculate stats
+      const teacherMap = new Map<string, TeacherWithSkills>()
+      
+      for (const teacherSkill of teacherSkills || []) {
+        const userId = teacherSkill.user_id
+        
+        if (!teacherMap.has(userId)) {
+          // Get review stats for this teacher
+          const reviewStats = await db.getUserReviewStats(userId)
+          
+          // Get total students (completed matches)
+          const { data: matches } = await supabase
+            .from('skill_matches')
+            .select('id')
+            .eq('teacher_id', userId)
+            .eq('status', 'completed')
+
+          teacherMap.set(userId, {
+            user: teacherSkill.user,
+            skills: [],
+            averageRating: reviewStats.averageRating,
+            totalReviews: reviewStats.totalReviews,
+            totalStudents: matches?.length || 0
+          })
+        }
+        
+        const teacher = teacherMap.get(userId)!
+        teacher.skills.push(teacherSkill)
+      }
+
+      setTeachers(Array.from(teacherMap.values()))
+      setLoading(false)
+    } catch (error) {
+      console.error('Error loading teachers:', error)
+      setLoading(false)
+    }
   }
 
   const refreshData = async () => {
     await loadSkills()
-    if (user) {
-      await loadUserSkills(user.id)
-    }
+    await loadTeachers()
   }
 
-  const loadUserSkills = async (userId: string) => {
-    const skills = await db.getUserSkills(userId)
-    setUserSkills(skills)
-  }
-
-  const findMatches = async (skillId: string) => {
-    if (!user) return
-    
-    // Get all teachers for this skill (including current user)
-    const { data: matches, error } = await supabase
-      .from('user_skills')
-      .select(`
-        *,
-        user:users(*)
-      `)
-      .eq('skill_id', skillId)
-      .eq('skill_type', 'teach')
-      .order('proficiency_level', { ascending: false })
-
-    if (!error && matches) {
-      setPotentialMatches(matches)
-    } else {
-      setPotentialMatches([])
-    }
-  }
-
-
-
-  const openMessageDialog = (teacher: UserSkill) => {
+  const openMessageDialog = (teacher: TeacherWithSkills, skill?: Skill) => {
     setSelectedTeacher(teacher)
-    setCustomMessage(`Hi! I'd love to learn ${selectedSkill?.name} from you. I'm particularly interested in improving my skills and would appreciate your guidance.`)
+    setSelectedSkill(skill || teacher.skills[0]?.skill || null)
+    setCustomMessage(`Hi! I'd love to learn ${skill?.name || teacher.skills[0]?.skill?.name} from you. I'm particularly interested in improving my skills and would appreciate your guidance.`)
     setShowMessageDialog(true)
   }
 
   const createMatch = async (teacherId: string, skillId: string, message?: string) => {
     if (!user) return
-    
-    // Prevent self-matching
-    if (teacherId === user.id) {
-      toast.error('Cannot request match with yourself', {
-        description: 'You cannot send a match request to yourself. Try finding other teachers for this skill.',
-        duration: 4000,
-      })
-      return
-    }
-    
+
     try {
-      // Create the match request
       const match = await db.createSkillMatch({
         teacher_id: teacherId,
         learner_id: user.id,
         skill_id: skillId,
         status: 'pending',
-        message: message || `Hi! I'd love to learn ${selectedSkill?.name} from you.`
+        message: message || ''
       })
-      
+
       if (match) {
         toast.success('Match Request Sent! 🎉', {
-          description: `Your request to learn ${selectedSkill?.name} has been sent to the teacher. They can accept or decline from their matches page.`,
+          description: `Your request to learn from ${match.teacher?.full_name || 'the teacher'} has been sent. They'll respond soon!`,
           duration: 5000,
         })
         
-        // Close dialogs
         setShowMessageDialog(false)
         setSelectedTeacher(null)
+        setSelectedSkill(null)
         setCustomMessage('')
         
-        // Refresh matches to show updated status
-        if (selectedSkill) {
-          findMatches(selectedSkill.id)
-        }
+        // Refresh data
+        refreshData()
       }
     } catch (error) {
       console.error('Error creating match:', error)
       toast.error('Failed to send match request', {
-        description: 'Something went wrong while sending your request. Please try again or contact support.',
+        description: 'Please try again or contact support if the problem persists.',
         duration: 4000,
       })
     }
   }
 
   const handleSendRequest = () => {
-    if (selectedTeacher && selectedSkill) {
-      createMatch(selectedTeacher.user_id, selectedSkill.id, customMessage)
-    }
+    if (!selectedTeacher || !selectedSkill) return
+    
+    createMatch(selectedTeacher.user.id, selectedSkill.id, customMessage)
   }
 
-  const filteredSkills = Object.entries(skills).reduce((acc, [category, categorySkills]) => {
-    if (selectedCategory !== 'all' && category !== selectedCategory) {
-      return acc
+  const filteredTeachers = teachers.filter(teacher => {
+    // Filter by search term
+    if (searchTerm) {
+      const matchesName = teacher.user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         teacher.user.email?.toLowerCase().includes(searchTerm.toLowerCase())
+      const matchesSkill = teacher.skills.some(skill => 
+        skill.skill?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        skill.skill?.category.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+      if (!matchesName && !matchesSkill) return false
     }
-    
-    const filtered = categorySkills.filter(skill =>
-      skill.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      category.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-    
-    if (filtered.length > 0) {
-      acc[category] = filtered
-    }
-    
-    return acc
-  }, {} as Record<string, Skill[]>)
 
-  const totalSkills = Object.values(skills).flat().length
+    // Filter by category
+    if (selectedCategory !== 'all') {
+      const hasSkillInCategory = teacher.skills.some(skill => skill.skill?.category === selectedCategory)
+      if (!hasSkillInCategory) return false
+    }
+
+    return true
+  })
 
   const getCategoryIcon = (category: string) => {
     switch (category.toLowerCase()) {
-      case 'programming':
-        return '💻'
-      case 'design':
-        return '🎨'
-      case 'marketing':
-        return '📈'
-      case 'creative':
-        return '🎭'
-      case 'languages':
-        return '🌍'
-      case 'soft skills':
-        return '🤝'
-      case 'music':
-        return '🎵'
-      case 'lifestyle':
-        return '🌱'
-      default:
-        return '🎯'
+      case 'programming': return '💻'
+      case 'design': return '🎨'
+      case 'marketing': return '📈'
+      case 'creative': return '🎭'
+      case 'languages': return '🌍'
+      case 'soft skills': return '🤝'
+      case 'music': return '🎵'
+      case 'lifestyle': return '🌱'
+      default: return '🎯'
     }
   }
 
@@ -228,6 +218,14 @@ export default function SkillMatching() {
     return 'Beginner'
   }
 
+  const getRatingColor = (rating: number) => {
+    if (rating >= 4.5) return 'text-green-600'
+    if (rating >= 4.0) return 'text-blue-600'
+    if (rating >= 3.5) return 'text-yellow-600'
+    if (rating >= 3.0) return 'text-orange-600'
+    return 'text-red-600'
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50/50">
@@ -239,8 +237,8 @@ export default function SkillMatching() {
             <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full animate-ping"></div>
           </div>
           <div className="text-center space-y-2">
-            <h3 className="text-lg font-semibold text-slate-900">Discovering skills</h3>
-            <p className="text-sm text-slate-500">Finding the perfect learning opportunities...</p>
+            <h3 className="text-lg font-semibold text-slate-900">Finding amazing teachers</h3>
+            <p className="text-sm text-slate-500">Discovering skilled mentors for you...</p>
           </div>
         </div>
       </div>
@@ -248,7 +246,7 @@ export default function SkillMatching() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20">
+    <div className="min-h-screen bg-slate-50/50">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-7xl">
         
         {/* Header */}
@@ -261,442 +259,376 @@ export default function SkillMatching() {
                 </div>
                 <div>
                   <h1 className="text-3xl lg:text-4xl font-bold text-slate-900 leading-tight">
-                    Discover Skills
+                    Find Teachers
                   </h1>
                   <p className="text-lg text-slate-600 mt-1">
-                    Find perfect learning opportunities and expert teachers
+                    Connect with skilled mentors and start learning
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* Stats & Actions */}
+            {/* Quick Actions */}
             <div className="flex items-center space-x-4">
               <div className="text-center px-4 py-2 bg-white/80 backdrop-blur-sm rounded-xl shadow-sm border border-blue-100">
-                <div className="text-2xl font-bold text-blue-600">{totalSkills}</div>
-                <div className="text-xs text-slate-600">Skills Available</div>
+                <div className="text-2xl font-bold text-blue-600">{teachers.length}</div>
+                <div className="text-xs text-slate-600">Teachers</div>
               </div>
               <div className="text-center px-4 py-2 bg-white/80 backdrop-blur-sm rounded-xl shadow-sm border border-purple-100">
-                <div className="text-2xl font-bold text-purple-600">{Object.keys(skills).length}</div>
-                <div className="text-xs text-slate-600">Categories</div>
+                <div className="text-2xl font-bold text-purple-600">{Object.values(skills).flat().length}</div>
+                <div className="text-xs text-slate-600">Skills</div>
               </div>
-              <Button
+              <Button 
                 onClick={() => setShowAddSkillForm(true)}
                 className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg"
               >
                 <Plus className="w-4 h-4 mr-2" />
-                Add New Skill
+                Add Your Skills
               </Button>
             </div>
           </div>
         </div>
 
-        {/* Search and Filters */}
-        <div className="mb-10">
-          <Card className="border-0 shadow-sm bg-white/80 backdrop-blur-sm">
-            <CardContent className="p-6">
-              <div className="flex flex-col lg:flex-row lg:items-center space-y-4 lg:space-y-0 lg:space-x-6">
-                
-                {/* Search */}
-                <div className="flex-1 relative">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                  <Input
-                    placeholder="Search skills, categories, or expertise..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-12 h-12 text-base border-slate-200 focus:border-blue-400 focus:ring-blue-400/20"
-                  />
-                </div>
-
-                {/* Category Filter */}
-                <div className="flex items-center space-x-3">
-                  <Filter className="w-5 h-5 text-slate-500" />
-                  <select 
-                    value={selectedCategory}
-                    onChange={(e) => setSelectedCategory(e.target.value)}
-                    className="px-4 py-3 border border-slate-200 rounded-lg focus:border-blue-400 focus:ring-blue-400/20 focus:outline-none bg-white"
-                  >
-                    <option value="all">All Categories</option>
-                    {Object.keys(skills).map(category => (
-                      <option key={category} value={category}>
-                        {getCategoryIcon(category)} {category}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* View Toggle */}
-                <div className="flex items-center bg-slate-100 rounded-lg p-1">
-                  <Button
-                    variant={viewMode === 'grid' ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => setViewMode('grid')}
-                    className="h-8 px-3"
-                  >
-                    <Grid className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant={viewMode === 'list' ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => setViewMode('list')}
-                    className="h-8 px-3"
-                  >
-                    <List className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Skills Grid/List */}
-        <div className="space-y-10">
-          {Object.entries(filteredSkills).map(([category, categorySkills]) => (
-            <div key={category} className="space-y-6">
+        {/* Filters */}
+        <Card className="mb-8 border-0 shadow-sm bg-white/80 backdrop-blur-sm">
+          <CardContent className="p-6">
+            <div className="flex flex-col lg:flex-row lg:items-center space-y-4 lg:space-y-0 lg:space-x-6">
               
-              {/* Category Header */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="w-12 h-12 bg-gradient-to-br from-slate-100 to-slate-200 rounded-xl flex items-center justify-center text-2xl">
-                    {getCategoryIcon(category)}
-                  </div>
-                  <div>
-                    <h2 className="text-2xl font-bold text-slate-900 capitalize">{category}</h2>
-                    <p className="text-sm text-slate-600">{categorySkills.length} skills available</p>
-                  </div>
-                </div>
-                <Badge variant="outline" className="bg-white/50">
-                  {categorySkills.length} skills
-                </Badge>
+              {/* Search */}
+              <div className="flex-1 relative">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <Input
+                  placeholder="Search teachers by name, skill, or category..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-12 h-12 text-base border-slate-200 focus:border-blue-400 focus:ring-blue-400/20"
+                />
               </div>
 
-              {/* Skills Grid */}
-              <div className={`grid gap-6 ${
-                viewMode === 'grid' 
-                  ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
-                  : 'grid-cols-1'
-              }`}>
-                {categorySkills.map((skill) => {
-                  const userHasSkill = userSkills.some(us => us.skill_id === skill.id)
-                  
-                  return (
-                    <Card 
-                      key={skill.id} 
-                      className={`group cursor-pointer transition-all duration-300 border-0 shadow-sm bg-white/80 backdrop-blur-sm hover:shadow-lg hover:scale-[1.02] ${
-                        selectedSkill?.id === skill.id ? 'ring-2 ring-blue-400 shadow-lg scale-[1.02]' : ''
-                      }`}
-                      onClick={() => {
-                        setSelectedSkill(skill)
-                        findMatches(skill.id)
-                      }}
-                    >
-                      <CardContent className="p-6">
-                        <div className="space-y-4">
-                          
-                          {/* Skill Header */}
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <h3 className="text-lg font-semibold text-slate-900 group-hover:text-blue-600 transition-colors line-clamp-2">
-                                {skill.name}
-                              </h3>
-                              {skill.description && (
-                                <p className="text-sm text-slate-600 mt-1 line-clamp-2">
-                                  {skill.description}
-                                </p>
-                              )}
-                            </div>
-                            {userHasSkill && (
-                              <div className="flex items-center space-x-1 ml-2">
-                                <UserCheck className="w-4 h-4 text-green-600" />
-                                <span className="text-xs text-green-600 font-medium">Added</span>
+              {/* Category Filter */}
+              <div className="flex items-center space-x-3">
+                <Filter className="w-5 h-5 text-slate-500" />
+                <select 
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="px-4 py-3 border border-slate-200 rounded-lg focus:border-blue-400 focus:ring-blue-400/20 focus:outline-none bg-white"
+                >
+                  <option value="all">All Categories</option>
+                  {Object.keys(skills).map(category => (
+                    <option key={category} value={category}>
+                      {getCategoryIcon(category)} {category}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* View Mode */}
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant={viewMode === 'grid' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setViewMode('grid')}
+                  className="h-10 w-10 p-0"
+                >
+                  <Grid className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant={viewMode === 'list' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setViewMode('list')}
+                  className="h-10 w-10 p-0"
+                >
+                  <List className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Teachers Grid */}
+        {filteredTeachers.length > 0 ? (
+          <div className={`grid gap-6 ${
+            viewMode === 'grid' 
+              ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' 
+              : 'grid-cols-1'
+          }`}>
+            {filteredTeachers.map((teacher) => {
+              const isCurrentUser = teacher.user.id === user?.id
+              
+              return (
+                <Card 
+                  key={teacher.user.id} 
+                  className="group cursor-pointer transition-all duration-300 border-0 shadow-sm bg-white/80 backdrop-blur-sm hover:shadow-lg hover:scale-[1.02]"
+                >
+                  <CardContent className="p-6">
+                    <div className="space-y-4">
+                      
+                      {/* Teacher Header */}
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center space-x-4">
+                          <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-white font-semibold text-lg ${
+                            isCurrentUser 
+                              ? 'bg-gradient-to-br from-blue-600 to-blue-700 ring-2 ring-blue-300' 
+                              : 'bg-gradient-to-br from-blue-600 to-purple-600'
+                          }`}>
+                            {teacher.user.full_name?.[0] || teacher.user.email?.[0]?.toUpperCase() || '?'}
+                          </div>
+                          <div className="flex-1">
+                            <Link 
+                              to={`/profile/${teacher.user.id}`}
+                              className="text-lg font-semibold text-slate-900 hover:text-blue-600 transition-colors"
+                            >
+                              {teacher.user.full_name || teacher.user.email?.split('@')[0] || 'Anonymous Teacher'}
+                            </Link>
+                            {isCurrentUser && (
+                              <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-700 mt-1">
+                                You
+                              </Badge>
+                            )}
+                            {teacher.user.location && (
+                              <div className="flex items-center space-x-1 mt-1 text-sm text-slate-600">
+                                <MapPin className="w-4 h-4" />
+                                <span>{teacher.user.location}</span>
                               </div>
                             )}
                           </div>
+                        </div>
+                      </div>
 
-                          {/* Skill Metrics */}
-                          <div className="flex items-center justify-between text-sm">
-                            <div className="flex items-center space-x-4">
-                              <div className="flex items-center space-x-1 text-slate-600">
-                                <Users className="w-4 h-4" />
-                                <span>{skillMetrics[skill.id]?.teacherCount || 0} teachers</span>
-                              </div>
-                              <div className="flex items-center space-x-1 text-slate-600">
-                                <TrendingUp className="w-4 h-4" />
-                                <span>{skillMetrics[skill.id]?.learnerCount || 0} learners</span>
-                              </div>
-                            </div>
-                            {skillMetrics[skill.id]?.averageRating > 0 && (
+                      {/* Rating and Stats */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          {teacher.averageRating > 0 ? (
+                            <>
                               <div className="flex items-center space-x-1">
-                                <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                                <span className="text-slate-600">{skillMetrics[skill.id]?.averageRating.toFixed(1)}</span>
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                  <Star
+                                    key={star}
+                                    className={`w-4 h-4 ${
+                                      star <= Math.round(teacher.averageRating)
+                                        ? 'text-yellow-400 fill-current'
+                                        : 'text-slate-300'
+                                    }`}
+                                  />
+                                ))}
                               </div>
-                            )}
-                          </div>
+                              <span className={`text-sm font-medium ${getRatingColor(teacher.averageRating)}`}>
+                                {teacher.averageRating.toFixed(1)}
+                              </span>
+                              <span className="text-sm text-slate-500">({teacher.totalReviews})</span>
+                            </>
+                          ) : (
+                            <span className="text-sm text-slate-500">No reviews yet</span>
+                          )}
+                        </div>
+                        <div className="text-right">
+                          <div className="text-sm font-medium text-slate-900">{teacher.totalStudents}</div>
+                          <div className="text-xs text-slate-500">students</div>
+                        </div>
+                      </div>
 
-                          {/* Action Buttons */}
-                          <div className="flex items-center space-x-2 pt-2">
-                            <Button
-                              size="sm"
+                      {/* Skills */}
+                      <div className="space-y-2">
+                        <h4 className="text-sm font-semibold text-slate-900">Teaching Skills</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {teacher.skills.slice(0, 3).map((skill) => (
+                            <Badge 
+                              key={skill.id} 
+                              variant="secondary" 
+                              className="text-xs cursor-pointer hover:bg-blue-100"
                               onClick={(e) => {
                                 e.stopPropagation()
-                                setSelectedSkill(skill)
-                                findMatches(skill.id)
+                                openMessageDialog(teacher, skill.skill)
                               }}
-                              className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-sm"
                             >
-                              <Eye className="w-4 h-4 mr-2" />
-                              View Teachers ({skillMetrics[skill.id]?.teacherCount || 0})
+                              {skill.skill?.name}
+                              <div className={`ml-1 px-1.5 py-0.5 rounded-full text-xs text-white ${getProficiencyColor(skill.proficiency_level)}`}>
+                                {getProficiencyLabel(skill.proficiency_level)}
+                              </div>
+                            </Badge>
+                          ))}
+                          {teacher.skills.length > 3 && (
+                            <Badge variant="outline" className="text-xs">
+                              +{teacher.skills.length - 3} more
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Bio */}
+                      {teacher.user.bio && (
+                        <p className="text-sm text-slate-600 line-clamp-2">
+                          {teacher.user.bio}
+                        </p>
+                      )}
+
+                      {/* Action Buttons */}
+                      <div className="flex items-center space-x-2 pt-2">
+                        {isCurrentUser ? (
+                          <div className="text-center w-full">
+                            <div className="text-sm text-blue-600 font-medium">Your Profile</div>
+                            <div className="text-xs text-slate-500">Can't request from yourself</div>
+                          </div>
+                        ) : (
+                          <>
+                            <Button
+                              size="sm"
+                              onClick={() => openMessageDialog(teacher)}
+                              className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white"
+                            >
+                              <MessageCircle className="w-4 h-4 mr-2" />
+                              Learn from {teacher.user.full_name?.split(' ')[0] || 'Teacher'}
                             </Button>
-                            {!userHasSkill && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  setShowAddSkillForm(true)
-                                }}
-                                className="border-slate-200 hover:bg-slate-50 px-3"
-                              >
-                                <Plus className="w-4 h-4 mr-1" />
-                                Add
+                            <Link to={`/profile/${teacher.user.id}`}>
+                              <Button size="sm" variant="outline">
+                                <Eye className="w-4 h-4" />
                               </Button>
-                            )}
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )
-                })}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* No Results */}
-        {Object.keys(filteredSkills).length === 0 && (
-          <div className="text-center py-20">
-            <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Search className="w-10 h-10 text-slate-400" />
-            </div>
-            <h3 className="text-2xl font-semibold text-slate-900 mb-2">No skills found</h3>
-            <p className="text-slate-600 mb-6 max-w-md mx-auto">
-              Try adjusting your search terms or browse different categories to discover new learning opportunities.
-            </p>
-            <Button onClick={() => {
-              setSearchTerm('')
-              setSelectedCategory('all')
-            }}>
-              <Target className="w-4 h-4 mr-2" />
-              Clear Filters
-            </Button>
+                            </Link>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )
+            })}
           </div>
-        )}
-
-        {/* Teachers Modal/Sidebar */}
-        {selectedSkill && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4">
-            <div className="w-full max-w-2xl bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[90vh] overflow-hidden">
-              
-              {/* Modal Header */}
-              <div className="p-6 border-b border-slate-100 bg-gradient-to-r from-blue-50 to-purple-50">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
-                      <BookOpen className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <h2 className="text-xl font-bold text-slate-900">{selectedSkill.name}</h2>
-                      <p className="text-sm text-slate-600">{potentialMatches.length} available teachers</p>
-                    </div>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setSelectedSkill(null)}
-                    className="h-8 w-8 p-0"
-                  >
-                    ×
-                  </Button>
-                </div>
+        ) : (
+          <Card className="border-0 shadow-sm bg-white/80 backdrop-blur-sm">
+            <CardContent className="p-12 text-center">
+              <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Users className="w-8 h-8 text-slate-400" />
               </div>
-
-              {/* Teachers List */}
-              <div className="overflow-y-auto max-h-[70vh]">
-                {potentialMatches.length > 0 ? (
-                  <div className="p-6 space-y-4">
-                    {potentialMatches.map((match) => {
-                      const isCurrentUser = match.user_id === user?.id
-                      
-                      return (
-                        <div key={match.id} className={`group p-4 rounded-xl transition-colors ${
-                          isCurrentUser 
-                            ? 'bg-blue-50 border border-blue-200' 
-                            : 'bg-slate-50 hover:bg-slate-100'
-                        }`}>
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-4">
-                              <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold ${
-                                isCurrentUser 
-                                  ? 'bg-gradient-to-br from-blue-600 to-blue-700 ring-2 ring-blue-300' 
-                                  : 'bg-gradient-to-br from-blue-600 to-purple-600'
-                              }`}>
-                                {match.user?.full_name?.[0] || match.user?.email?.[0]?.toUpperCase() || '?'}
-                              </div>
-                              <div className="flex-1">
-                                <div className="flex items-center space-x-2">
-                                                                <Link 
-                                to={`/profile/${match.user_id}`}
-                                className="font-semibold text-slate-900 hover:text-blue-600 transition-colors"
-                              >
-                                {match.user?.full_name || match.user?.email?.split('@')[0] || 'Anonymous Teacher'}
-                              </Link>
-                                  {isCurrentUser && (
-                                    <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-700">
-                                      You
-                                    </Badge>
-                                  )}
-                                </div>
-                                <div className="flex items-center space-x-3 mt-1">
-                                  <div className={`px-2 py-1 rounded-full text-xs text-white font-medium ${getProficiencyColor(match.proficiency_level)}`}>
-                                    {getProficiencyLabel(match.proficiency_level)}
-                                  </div>
-                                  {match.user?.location && (
-                                    <div className="flex items-center text-xs text-slate-500">
-                                      <MapPin className="w-3 h-3 mr-1" />
-                                      {match.user.location}
-                                    </div>
-                                  )}
-                                </div>
-                                {match.description && (
-                                  <p className="text-sm text-slate-600 mt-2 line-clamp-2">
-                                    {match.description}
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                            {isCurrentUser ? (
-                              <div className="text-center">
-                                <div className="text-sm text-blue-600 font-medium">Your Profile</div>
-                                <div className="text-xs text-slate-500">Can't request from yourself</div>
-                              </div>
-                            ) : (
-                              <Button
-                                size="sm"
-                                onClick={() => openMessageDialog(match)}
-                                className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white opacity-0 group-hover:opacity-100 transition-opacity"
-                              >
-                                <Send className="w-4 h-4 mr-2" />
-                                Request Match
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                ) : (
-                  <div className="p-12 text-center">
-                    <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <Users className="w-8 h-8 text-slate-400" />
-                    </div>
-                    <h3 className="text-lg font-medium text-slate-900 mb-2">No teachers found</h3>
-                    <p className="text-slate-600 mb-4">
-                      Be the first to add this skill and help others learn!
-                    </p>
-                    <Button
-                      onClick={() => {
-                        setSelectedSkill(null)
-                        setShowAddSkillForm(true)
-                      }}
-                      className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Teach This Skill
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+              <h3 className="text-lg font-medium text-slate-900 mb-2">
+                {searchTerm || selectedCategory !== 'all' ? 'No teachers found' : 'No teachers available'}
+              </h3>
+              <p className="text-slate-600 mb-6">
+                {searchTerm || selectedCategory !== 'all' 
+                  ? 'Try adjusting your search or filter criteria.'
+                  : 'Check back later or add your own skills to start teaching!'
+                }
+              </p>
+              <Button 
+                onClick={() => setShowAddSkillForm(true)}
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Your Skills
+              </Button>
+            </CardContent>
+          </Card>
         )}
+      </div>
 
-        {/* Add Skill Form */}
-        <AddSkillForm
-          isOpen={showAddSkillForm}
-          onClose={() => setShowAddSkillForm(false)}
-          onSkillAdded={refreshData}
-        />
+      {/* Add Skill Form */}
+      <AddSkillForm
+        isOpen={showAddSkillForm}
+        onClose={() => setShowAddSkillForm(false)}
+        onSkillAdded={refreshData}
+      />
 
-        {/* Message Dialog */}
-        {showMessageDialog && selectedTeacher && selectedSkill && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl">
-              
-              {/* Dialog Header */}
-              <div className="p-6 border-b border-slate-100">
-                <div className="flex items-center justify-between">
+      {/* Message Dialog */}
+      {showMessageDialog && selectedTeacher && selectedSkill && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl">
+            
+            {/* Dialog Header */}
+            <div className="p-6 border-b border-slate-100">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center">
+                    <MessageCircle className="w-5 h-5 text-white" />
+                  </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-slate-900">Send Learning Request</h3>
-                    <p className="text-sm text-slate-600 mt-1">
-                      To {selectedTeacher.user?.full_name || selectedTeacher.user?.email?.split('@')[0]} for {selectedSkill.name}
-                    </p>
+                    <h3 className="text-lg font-semibold text-slate-900">Request Learning Session</h3>
+                    <p className="text-sm text-slate-600">Connect with {selectedTeacher.user.full_name || 'this teacher'}</p>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setShowMessageDialog(false)
-                      setSelectedTeacher(null)
-                      setCustomMessage('')
-                    }}
-                    className="h-8 w-8 p-0"
-                  >
-                    ×
-                  </Button>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowMessageDialog(false)}
+                  className="h-8 w-8 p-0"
+                >
+                  ×
+                </Button>
+              </div>
+            </div>
+
+            {/* Dialog Content */}
+            <div className="p-6 space-y-4">
+              
+              {/* Teacher Info */}
+              <div className="p-4 bg-slate-50 rounded-xl">
+                <div className="flex items-center space-x-3">
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold">
+                    {selectedTeacher.user.full_name?.[0] || selectedTeacher.user.email?.[0]?.toUpperCase() || '?'}
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-slate-900">
+                      {selectedTeacher.user.full_name || selectedTeacher.user.email?.split('@')[0] || 'Teacher'}
+                    </h4>
+                    <p className="text-sm text-slate-600">Teaching {selectedSkill.name}</p>
+                  </div>
                 </div>
               </div>
 
-              {/* Message Input */}
-              <div className="p-6">
+              {/* Skill Selection */}
+              <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Your message
+                  Skill to Learn
+                </label>
+                <select
+                  value={selectedSkill.id}
+                  onChange={(e) => {
+                    const skill = selectedTeacher.skills.find(s => s.skill?.id === e.target.value)?.skill
+                    if (skill) setSelectedSkill(skill)
+                  }}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:border-blue-400 focus:ring-blue-400/20 focus:outline-none"
+                >
+                  {selectedTeacher.skills.map((skill) => (
+                    <option key={skill.id} value={skill.skill?.id}>
+                      {skill.skill?.name} ({getProficiencyLabel(skill.proficiency_level)})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Message */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Your Message
                 </label>
                 <textarea
                   value={customMessage}
                   onChange={(e) => setCustomMessage(e.target.value)}
-                  placeholder="Introduce yourself and explain why you'd like to learn this skill..."
-                  className="w-full h-32 px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                  placeholder="Introduce yourself and explain what you'd like to learn..."
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:border-blue-400 focus:ring-blue-400/20 focus:outline-none resize-none"
+                  rows={4}
                 />
-                <p className="text-xs text-slate-500 mt-2">
-                  This message will be the first message in your conversation when the teacher accepts your request.
-                </p>
-              </div>
-
-              {/* Dialog Actions */}
-              <div className="p-6 pt-0 flex items-center justify-end space-x-3">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setShowMessageDialog(false)
-                    setSelectedTeacher(null)
-                    setCustomMessage('')
-                  }}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleSendRequest}
-                  disabled={!customMessage.trim()}
-                  className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white"
-                >
-                  <Send className="w-4 h-4 mr-2" />
-                  Send Request
-                </Button>
               </div>
             </div>
+
+            {/* Dialog Actions */}
+            <div className="p-6 border-t border-slate-100 flex space-x-3">
+              <Button
+                variant="outline"
+                onClick={() => setShowMessageDialog(false)}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSendRequest}
+                className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white"
+              >
+                <Send className="w-4 h-4 mr-2" />
+                Send Request
+              </Button>
+            </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   )
 } 

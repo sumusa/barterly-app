@@ -318,15 +318,40 @@ export default function Messages() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30 dark:from-slate-900 dark:via-blue-900/10 dark:to-indigo-900/10">
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-7xl">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-slate-900 dark:text-white mb-2">
-            Messages 💬
-          </h1>
-          <p className="text-lg text-slate-600 dark:text-slate-300">
-            Chat with your skill exchange partners
-          </p>
+        <div className="mb-10">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-6 lg:space-y-0">
+            <div className="space-y-3">
+              <div className="flex items-center space-x-3">
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+                  <MessageCircle className="w-8 h-8 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-3xl lg:text-4xl font-bold text-slate-900 leading-tight">
+                    Messages
+                  </h1>
+                  <p className="text-lg text-slate-600 mt-1">
+                    Chat with your skill exchange partners
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Actions */}
+            <div className="flex items-center space-x-4">
+              <div className="text-center px-4 py-2 bg-white/80 backdrop-blur-sm rounded-xl shadow-sm border border-blue-100">
+                <div className="text-2xl font-bold text-blue-600">{conversations.length}</div>
+                <div className="text-xs text-slate-600">Conversations</div>
+              </div>
+              <div className="text-center px-4 py-2 bg-white/80 backdrop-blur-sm rounded-xl shadow-sm border border-purple-100">
+                <div className="text-2xl font-bold text-purple-600">
+                  {conversations.reduce((total, conv) => total + (conv.unreadCount || 0), 0)}
+                </div>
+                <div className="text-xs text-slate-600">Unread</div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div className="grid lg:grid-cols-4 gap-8 h-[calc(100vh-200px)]">

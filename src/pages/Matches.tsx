@@ -4,7 +4,7 @@ import { toast } from 'sonner'
 import { supabase, db, type SkillMatch, type User, type Session } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import ReviewForm from '@/components/ReviewForm'
 import { 
@@ -22,8 +22,6 @@ import {
   BookOpen,
   Star,
   MapPin,
-  Send,
-  UserCheck,
   AlertCircle
 } from 'lucide-react'
 
@@ -434,7 +432,7 @@ export default function Matches() {
                                     size="sm"
                                     onClick={() => {
                                       setSelectedSession(session)
-                                      setSelectedReviewee(partner)
+                                      setSelectedReviewee(partner || null)
                                       setShowReviewForm(true)
                                     }}
                                     className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white"
