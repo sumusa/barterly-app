@@ -121,7 +121,18 @@ export interface Review {
   session?: Session
 }
 
-
+export interface RecommendedMatch {
+  teacher_id: string
+  teacher_name: string
+  teacher_email: string
+  skill_name: string
+  skill_category: string
+  proficiency_level: number
+  teacher_bio?: string
+  teacher_location?: string
+  compatibility_score: number
+  match_reason: string
+}
 
 // Database helper functions
 export const db = {
@@ -580,12 +591,23 @@ export const db = {
       .eq('reviewer_id', userId)
       .single()
     
-    if (error && error.code !== 'PGRST116') { // PGRST116 is "not found"
+    if (error && error.code !== 'PGRST116') {
       console.error('Error checking if user reviewed session:', error)
-      return false
     }
     
     return !!data
   },
 
+  // Recommendations
+  async getRecommendedMatches(userId: string): Promise<RecommendedMatch[]> {
+    const { data, error } = await supabase
+      .rpc('get_recommended_matches', { user_id_param: userId })
+    
+    if (error) {
+      console.error('Error fetching recommended matches:', error)
+      return []
+    }
+    
+    return data || []
+  }
 } 

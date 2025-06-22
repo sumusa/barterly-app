@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
-import { supabase, db, type Skill, type UserSkill, type User } from '@/lib/supabase'
+import { supabase, db, type Skill, type UserSkill, type User, type RecommendedMatch } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
@@ -21,6 +21,8 @@ import {
   Send,
   Eye,
   MessageCircle,
+  Zap,
+  Target,
 } from 'lucide-react'
 
 interface TeacherWithSkills {
@@ -44,16 +46,30 @@ export default function SkillMatching() {
   const [selectedTeacher, setSelectedTeacher] = useState<TeacherWithSkills | null>(null)
   const [customMessage, setCustomMessage] = useState('')
   const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null)
+  const [recommendations, setRecommendations] = useState<RecommendedMatch[]>([])
+  const [loadingRecommendations, setLoadingRecommendations] = useState(false)
 
   useEffect(() => {
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       setUser(user)
+      
+      // Only load data after user is set
+      if (user) {
+        await loadSkills()
+        await loadTeachers()
+        await loadRecommendations()
+      }
     }
     getUser()
-    loadSkills()
-    loadTeachers()
   }, [])
+
+  // Load recommendations when user changes
+  useEffect(() => {
+    if (user) {
+      loadRecommendations()
+    }
+  }, [user])
 
   const loadSkills = async () => {
     const skillsByCategory = await db.getSkillsByCategory()
@@ -116,9 +132,31 @@ export default function SkillMatching() {
     }
   }
 
+  const loadRecommendations = async () => {
+    if (!user) {
+      console.log('No user found, skipping recommendations')
+      return
+    }
+    
+    console.log('Loading recommendations for user:', user.id, user.email)
+    setLoadingRecommendations(true)
+    try {
+      const recs = await db.getRecommendedMatches(user.id)
+      console.log('Recommendations loaded:', recs)
+      setRecommendations(recs)
+    } catch (error) {
+      console.error('Error loading recommendations:', error)
+    } finally {
+      setLoadingRecommendations(false)
+    }
+  }
+
   const refreshData = async () => {
     await loadSkills()
     await loadTeachers()
+    if (user) {
+      await loadRecommendations()
+    }
   }
 
   const openMessageDialog = (teacher: TeacherWithSkills, skill?: Skill) => {
@@ -205,10 +243,10 @@ export default function SkillMatching() {
   }
 
   const getProficiencyColor = (level: number) => {
-    if (level === 4) return 'bg-gradient-to-r from-green-500 via-emerald-500 to-green-600'
+    if (level === 4) return 'bg-gradient-to-r from-green-500 to-green-600'
     if (level === 3) return 'bg-gradient-to-r from-blue-500 to-cyan-500'
     if (level === 2) return 'bg-gradient-to-r from-yellow-500 to-orange-600'
-    return 'bg-gradient-to-r from-slate-500 via-blue-200 to-blue-400'
+    return 'bg-gradient-to-r from-slate-600 to-blue-600'
   }
 
   const getProficiencyLabel = (level: number) => {
@@ -344,6 +382,158 @@ export default function SkillMatching() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Recommendations Section */}
+        {user && (
+          <div className="mb-12">
+            <div className="flex items-center space-x-3 mb-6">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl flex items-center justify-center shadow-lg">
+                <Zap className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-slate-900">Recommended for You</h2>
+                <p className="text-slate-600">Teachers matched to your learning goals</p>
+              </div>
+            </div>
+            
+            {loadingRecommendations ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {[1, 2, 3].map((i) => (
+                  <Card key={i} className="border-0 shadow-sm bg-gradient-to-br from-blue-50 to-purple-50 border border-blue-100">
+                    <CardContent className="p-4">
+                      <div className="space-y-3">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-12 h-12 bg-slate-200 rounded-xl animate-pulse"></div>
+                          <div className="flex-1 space-y-2">
+                            <div className="h-4 bg-slate-200 rounded animate-pulse"></div>
+                            <div className="h-3 bg-slate-200 rounded animate-pulse w-2/3"></div>
+                          </div>
+                        </div>
+                        <div className="h-3 bg-slate-200 rounded animate-pulse"></div>
+                        <div className="h-8 bg-slate-200 rounded animate-pulse"></div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : recommendations.length > 0 ? (
+              <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-6 border border-blue-100">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {recommendations.slice(0, 6).map((rec) => (
+                    <Card 
+                      key={`${rec.teacher_id}-${rec.skill_name}`} 
+                      className="group cursor-pointer transition-all duration-300 border-0 shadow-sm bg-white/80 backdrop-blur-sm hover:shadow-lg hover:scale-[1.02] border border-blue-100"
+                    >
+                      <CardContent className="p-4">
+                        <div className="space-y-3">
+                          
+                          {/* Teacher Info */}
+                          <div className="flex items-center space-x-3">
+                            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl flex items-center justify-center text-white font-semibold">
+                              {rec.teacher_name[0]?.toUpperCase() || 'T'}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-semibold text-slate-900 truncate">
+                                {rec.teacher_name}
+                              </h3>
+                              <p className="text-sm text-slate-600 truncate">
+                                {rec.skill_name}
+                              </p>
+                            </div>
+                            <Badge 
+                              variant="secondary" 
+                              className="text-xs bg-blue-100 text-blue-700"
+                            >
+                              {rec.compatibility_score} pts
+                            </Badge>
+                          </div>
+
+                          {/* Match Reason */}
+                          <div className="flex items-center space-x-2">
+                            <Target className="w-4 h-4 text-blue-500" />
+                            <p className="text-sm text-slate-700 font-medium">
+                              {rec.match_reason}
+                            </p>
+                          </div>
+
+                          {/* Skill Details */}
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                              <Badge 
+                                variant="secondary" 
+                                className="text-xs"
+                              >
+                                {getCategoryIcon(rec.skill_category)} {rec.skill_category}
+                              </Badge>
+                              <Badge 
+                                variant="secondary" 
+                                className={`text-xs text-white ${getProficiencyColor(rec.proficiency_level)}`}
+                              >
+                                {getProficiencyLabel(rec.proficiency_level)}
+                              </Badge>
+                            </div>
+                            {rec.teacher_location && (
+                              <div className="flex items-center space-x-1 text-xs text-slate-500">
+                                <MapPin className="w-3 h-3" />
+                                <span>{rec.teacher_location}</span>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Action Button */}
+                          <Button
+                            size="sm"
+                            onClick={() => {
+                              // Find the teacher in the teachers list and open message dialog
+                              const teacher = teachers.find(t => t.user.id === rec.teacher_id)
+                              if (teacher) {
+                                const skill = teacher.skills.find(s => s.skill?.name === rec.skill_name)
+                                openMessageDialog(teacher, skill?.skill)
+                              }
+                            }}
+                            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+                          >
+                            <MessageCircle className="w-4 h-4 mr-2" />
+                            Connect with {rec.teacher_name.split(' ')[0]}
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <Card className="border-0 shadow-sm bg-gradient-to-br from-blue-50 to-purple-50 border border-blue-100">
+                <CardContent className="p-8 text-center">
+                  <div className="w-16 h-16 bg-slate-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Target className="w-8 h-8 text-slate-400" />
+                  </div>
+                  <h3 className="text-lg font-medium text-slate-900 mb-2">No matching teachers found</h3>
+                  <p className="text-slate-600 mb-4">
+                    We couldn't find teachers for your current learning goals. Try browsing all teachers below or check back later!
+                  </p>
+                  <div className="flex items-center justify-center space-x-2 text-sm text-slate-500">
+                    <span>💡</span>
+                    <span>More teachers join every day</span>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        )}
+
+        {/* All Teachers Section */}
+        <div className="mb-8">
+          <div className="flex items-center space-x-3 mb-6">
+            <div className="w-12 h-12 bg-gradient-to-br from-slate-500 to-slate-600 rounded-xl flex items-center justify-center shadow-lg">
+              <Users className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-slate-900">All Teachers</h2>
+              <p className="text-slate-600">Browse all available teachers and skills</p>
+            </div>
+          </div>
+        </div>
 
         {/* Teachers Grid */}
         {filteredTeachers.length > 0 ? (
