@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { supabase, db, type User, type UserSkill, type SkillMatch, type Session } from '@/lib/supabase'
+import { supabase, db, type User, type SkillMatch, type Session } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -9,25 +9,16 @@ import {
   BookOpen, 
   MessageCircle, 
   Calendar,
-  Star,
-  Target,
-  ArrowRight,
   Plus,
   Clock,
   CheckCircle,
   User as UserIcon,
-  Award,
   Activity,
-  MapPin,
   Video,
   Eye,
-  Heart,
   Lightbulb,
-  TrendingUp,
-  Zap,
   ChevronRight,
   Sparkles,
-  PlayCircle
 } from 'lucide-react'
 
 interface DashboardStats {
