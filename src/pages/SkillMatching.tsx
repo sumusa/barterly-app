@@ -205,10 +205,10 @@ export default function SkillMatching() {
   }
 
   const getProficiencyColor = (level: number) => {
-    if (level === 4) return 'bg-gradient-to-r from-green-500 to-emerald-500'
+    if (level === 4) return 'bg-gradient-to-r from-green-500 via-emerald-500 to-green-600'
     if (level === 3) return 'bg-gradient-to-r from-blue-500 to-cyan-500'
-    if (level === 2) return 'bg-gradient-to-r from-yellow-500 to-orange-500'
-    return 'bg-gradient-to-r from-slate-400 to-slate-500'
+    if (level === 2) return 'bg-gradient-to-r from-yellow-500 to-orange-600'
+    return 'bg-gradient-to-r from-slate-500 via-blue-200 to-blue-400'
   }
 
   const getProficiencyLabel = (level: number) => {
@@ -474,7 +474,7 @@ export default function SkillMatching() {
                             <Button
                               size="sm"
                               onClick={() => openMessageDialog(teacher)}
-                              className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white"
+                              className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
                             >
                               <MessageCircle className="w-4 h-4 mr-2" />
                               Learn from {teacher.user.full_name?.split(' ')[0] || 'Teacher'}
