@@ -425,7 +425,7 @@ export default function LandingPage() {
           <div className="border-t border-slate-800 pt-8">
             <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
               <div className="flex items-center space-x-2 text-slate-400">
-                <span>© 2024 barterly. All rights reserved.</span>
+                <span>© 2025 barterly. All rights reserved.</span>
               </div>
               
               <div className="flex items-center space-x-2 text-slate-400">
@@ -441,7 +441,7 @@ export default function LandingPage() {
                 >
                   Sumayyah
                 </a>
-                <span>• 2024</span>
+                <span>• 2025</span>
               </div>
             </div>
           </div>
