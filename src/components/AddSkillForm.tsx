@@ -11,12 +11,8 @@ import {
   GraduationCap, 
   Star,
   Sparkles,
-  Target,
-  Lightbulb,
-  Zap,
   CheckCircle,
-  AlertCircle,
-  ChevronDown
+  AlertCircle
 } from 'lucide-react'
 
 interface AddSkillFormProps {

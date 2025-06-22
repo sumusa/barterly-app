@@ -494,21 +494,17 @@ export default function Matches() {
       {showReviewForm && selectedSession && selectedReviewee && (
         <ReviewForm
           isOpen={showReviewForm}
-          onClose={() => {
+          onClose={() => setShowReviewForm(false)}
+          sessionId={selectedSession?.id || ''}
+          sessionTitle={selectedSession?.title || ''}
+          revieweeId={selectedReviewee?.id || ''}
+          revieweeName={selectedReviewee?.full_name || selectedReviewee?.email?.split('@')[0] || 'Unknown'}
+          sessionDate={selectedSession?.scheduled_at || ''}
+          sessionDuration={selectedSession?.duration_minutes || 60}
+          onReviewSubmitted={() => {
             setShowReviewForm(false)
             setSelectedSession(null)
             setSelectedReviewee(null)
-          }}
-          sessionId={selectedSession.id}
-          sessionTitle={selectedSession.title}
-          revieweeId={selectedReviewee.id}
-          revieweeName={selectedReviewee.full_name || selectedReviewee.email?.split('@')[0] || 'User'}
-          revieweeEmail={selectedReviewee.email || ''}
-          sessionDate={selectedSession.scheduled_at}
-          sessionDuration={selectedSession.duration_minutes}
-          onReviewSubmitted={() => {
-            // Refresh data after review submission
-            loadUserAndMatches()
           }}
         />
       )}

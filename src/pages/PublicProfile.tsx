@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { supabase, db, type User, type UserSkill, type SkillMatch } from '@/lib/supabase'
+import { supabase, db, type User, type UserSkill } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -17,7 +17,6 @@ import {
   MessageCircle,
   Sparkles,
   User as UserIcon,
-  Award,
   TrendingUp,
   Zap
 } from 'lucide-react'
@@ -371,11 +370,13 @@ export default function PublicProfile() {
             </Card>
 
             {/* Reviews Section */}
-            <ReviewDisplay 
-              userId={userId} 
-              userName={userProfile.full_name || userProfile.email?.split('@')[0] || 'This user'}
-              maxReviews={3}
-            />
+            {userId && (
+              <ReviewDisplay 
+                userId={userId} 
+                userName={userProfile.full_name || userProfile.email?.split('@')[0] || 'This user'}
+                maxReviews={3}
+              />
+            )}
           </div>
         </div>
       </div>

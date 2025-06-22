@@ -3,22 +3,16 @@ import { Link } from 'react-router-dom'
 import { supabase, db, type SkillMatch, type Message } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { 
   MessageCircle, 
   Send, 
   Search, 
   MoreVertical,
-  Info,
-  Archive,
-  Trash2,
-  Circle,
   CheckCircle,
   CheckCircle2,
-  Clock,
   Star,
-  User,
   Calendar,
   MapPin
 } from 'lucide-react'

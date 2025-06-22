@@ -1,13 +1,12 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { supabase, db, type Review } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
 import { 
   Star, 
-  MessageCircle, 
   Send, 
   X,
   User,
@@ -22,7 +21,6 @@ interface ReviewFormProps {
   sessionTitle: string
   revieweeId: string
   revieweeName: string
-  revieweeEmail: string
   sessionDate: string
   sessionDuration: number
   onReviewSubmitted?: () => void
@@ -35,7 +33,6 @@ export default function ReviewForm({
   sessionTitle,
   revieweeId,
   revieweeName,
-  revieweeEmail,
   sessionDate,
   sessionDuration,
   onReviewSubmitted

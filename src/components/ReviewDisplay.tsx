@@ -1,23 +1,17 @@
 import { useState, useEffect } from 'react'
-import { supabase, db, type Review } from '@/lib/supabase'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import { supabase, type Review } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
 import { 
   Star, 
-  MessageCircle, 
-  User,
   Calendar,
-  ChevronDown,
   ChevronUp,
-  ThumbsUp,
-  Heart
+  ChevronDown
 } from 'lucide-react'
 
 interface ReviewDisplayProps {
   userId: string
   userName: string
-  showAll?: boolean
   maxReviews?: number
 }
 
@@ -30,7 +24,6 @@ interface ReviewStats {
 export default function ReviewDisplay({ 
   userId, 
   userName, 
-  showAll = false, 
   maxReviews = 5 
 }: ReviewDisplayProps) {
   const [reviews, setReviews] = useState<Review[]>([])
@@ -145,40 +138,6 @@ export default function ReviewDisplay({
 
   return (
     <Card className="border-0 shadow-sm bg-white/80 backdrop-blur-sm">
-      <CardHeader className="pb-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center">
-              <Star className="w-4 h-4 text-white" />
-            </div>
-            <div>
-              <CardTitle className="text-lg text-slate-900">Reviews</CardTitle>
-              <p className="text-sm text-slate-600">{stats.totalReviews} reviews</p>
-            </div>
-          </div>
-          <div className="text-right">
-            <div className="flex items-center space-x-2">
-              <div className={`text-2xl font-bold ${getRatingColor(stats.averageRating)}`}>
-                {stats.averageRating.toFixed(1)}
-              </div>
-              <div className="flex items-center space-x-1">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <Star
-                    key={star}
-                    className={`w-4 h-4 ${
-                      star <= Math.round(stats.averageRating)
-                        ? 'text-yellow-400 fill-current'
-                        : 'text-slate-300'
-                    }`}
-                  />
-                ))}
-              </div>
-            </div>
-            <p className="text-xs text-slate-500">{getRatingLabel(stats.averageRating)}</p>
-          </div>
-        </div>
-      </CardHeader>
-
       <CardContent className="space-y-4">
         {/* Rating Distribution */}
         <div className="space-y-2">

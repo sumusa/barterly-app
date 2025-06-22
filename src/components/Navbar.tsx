@@ -1,21 +1,16 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { supabase, db } from '@/lib/supabase'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { 
   User, 
   LogOut, 
-  Settings, 
   ChevronDown,
   Home,
   Users,
   MessageCircle,
   Calendar,
   GraduationCap,
-  BookOpen,
   Sparkles,
-  Target,
   Menu,
   X
 } from 'lucide-react'

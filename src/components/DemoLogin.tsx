@@ -4,10 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { 
-  User, 
-  GraduationCap, 
-  BookOpen, 
-  Zap, 
+  Zap,
   Users,
   Sparkles,
   Code,
@@ -219,7 +216,7 @@ export default function DemoLogin({ onClose }: DemoLoginProps) {
                       <div className="space-y-2">
                         <p className="text-xs font-medium text-slate-700 uppercase tracking-wide">Skills</p>
                         <div className="flex flex-wrap gap-2">
-                          {user.skills.map((skill, index) => (
+                          {user.skills.map((skill, _index) => (
                             <Badge 
                               key={skill} 
                               variant="secondary" 

@@ -19,19 +19,10 @@ import {
   XCircle,
   AlertCircle,
   Play,
-  Pause,
-  MoreVertical,
-  Link,
-  FileText,
   Bell,
   MessageCircle,
-  Filter,
   Search,
-  CalendarDays,
-  Timer,
   User,
-  Globe,
-  Phone
 } from 'lucide-react'
 
 type SessionStatus = 'scheduled' | 'in_progress' | 'completed' | 'cancelled'
@@ -149,7 +140,7 @@ export default function Sessions() {
 
   const handleStatusUpdate = async (sessionId: string, status: SessionStatus) => {
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('sessions')
         .update({ status })
         .eq('id', sessionId)
