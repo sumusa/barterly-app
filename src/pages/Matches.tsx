@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
-import { supabase, db, type SkillMatch, type User } from '@/lib/supabase'
+import { supabase, db, type SkillMatch, type User, type Session } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import ReviewForm from '@/components/ReviewForm'
 import { 
   Search,
   Filter,
@@ -36,6 +37,10 @@ export default function Matches() {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedFilter, setSelectedFilter] = useState<MatchFilter>('all')
   const [responding, setResponding] = useState<string | null>(null)
+  const [completedSessions, setCompletedSessions] = useState<Session[]>([])
+  const [showReviewForm, setShowReviewForm] = useState(false)
+  const [selectedSession, setSelectedSession] = useState<Session | null>(null)
+  const [selectedReviewee, setSelectedReviewee] = useState<User | null>(null)
 
   useEffect(() => {
     loadUserAndMatches()
@@ -53,6 +58,11 @@ export default function Matches() {
       if (user) {
         const userMatches = await db.getSkillMatches(user.id)
         setMatches(userMatches)
+        
+        // Load completed sessions for review prompts
+        const sessions = await db.getUserSessions(user.id)
+        const completed = sessions.filter(s => s.status === 'completed')
+        setCompletedSessions(completed)
       }
     } catch (error) {
       console.error('Error loading matches:', error)
@@ -407,6 +417,36 @@ export default function Matches() {
                               </Button>
                             </Link>
                           </div>
+                        ) : match.status === 'completed' ? (
+                          <div className="flex items-center space-x-2">
+                            <Link to={`/profile/${partner?.id}`}>
+                              <Button size="sm" variant="outline">
+                                <Eye className="h-4 w-4 mr-1" />
+                                View Profile
+                              </Button>
+                            </Link>
+                            {/* Review Prompt for Completed Sessions */}
+                            {(() => {
+                              const session = completedSessions.find(s => s.skill_match?.id === match.id)
+                              if (session) {
+                                return (
+                                  <Button
+                                    size="sm"
+                                    onClick={() => {
+                                      setSelectedSession(session)
+                                      setSelectedReviewee(partner)
+                                      setShowReviewForm(true)
+                                    }}
+                                    className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white"
+                                  >
+                                    <Star className="h-4 w-4 mr-1" />
+                                    Review
+                                  </Button>
+                                )
+                              }
+                              return null
+                            })()}
+                          </div>
                         ) : isPending && !isTeacher ? (
                           <Badge variant="secondary" className="text-xs">
                             Waiting for response
@@ -451,6 +491,29 @@ export default function Matches() {
           </Card>
         )}
       </div>
+
+      {/* Review Form */}
+      {showReviewForm && selectedSession && selectedReviewee && (
+        <ReviewForm
+          isOpen={showReviewForm}
+          onClose={() => {
+            setShowReviewForm(false)
+            setSelectedSession(null)
+            setSelectedReviewee(null)
+          }}
+          sessionId={selectedSession.id}
+          sessionTitle={selectedSession.title}
+          revieweeId={selectedReviewee.id}
+          revieweeName={selectedReviewee.full_name || selectedReviewee.email?.split('@')[0] || 'User'}
+          revieweeEmail={selectedReviewee.email || ''}
+          sessionDate={selectedSession.scheduled_at}
+          sessionDuration={selectedSession.duration_minutes}
+          onReviewSubmitted={() => {
+            // Refresh data after review submission
+            loadUserAndMatches()
+          }}
+        />
+      )}
     </div>
   )
 } 

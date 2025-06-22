@@ -4,6 +4,7 @@ import { supabase, db, type User, type UserSkill, type SkillMatch } from '@/lib/
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import ReviewDisplay from '@/components/ReviewDisplay'
 import { 
   ArrowLeft,
   MapPin, 
@@ -368,6 +369,13 @@ export default function PublicProfile() {
                 )}
               </CardContent>
             </Card>
+
+            {/* Reviews Section */}
+            <ReviewDisplay 
+              userId={userId} 
+              userName={userProfile.full_name || userProfile.email?.split('@')[0] || 'This user'}
+              maxReviews={3}
+            />
           </div>
         </div>
       </div>

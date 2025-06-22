@@ -214,19 +214,40 @@ export const db = {
     const teacherCount = skillCounts?.filter(s => s.skill_type === 'teach').length || 0
     const learnerCount = skillCounts?.filter(s => s.skill_type === 'learn').length || 0
 
-    // Get average rating from reviews (if reviews table exists)
-    // For now, we'll calculate a mock rating based on teacher proficiency levels
+    // Get average rating from actual reviews
     const { data: teachers, error: teachersError } = await supabase
       .from('user_skills')
-      .select('proficiency_level')
+      .select('user_id')
       .eq('skill_id', skillId)
       .eq('skill_type', 'teach')
 
     let averageRating = 0
     if (!teachersError && teachers && teachers.length > 0) {
-      const totalProficiency = teachers.reduce((sum, teacher) => sum + teacher.proficiency_level, 0)
-      // Convert proficiency (1-10) to rating (1-5)
-      averageRating = Math.round((totalProficiency / teachers.length / 2) * 10) / 10
+      const teacherIds = teachers.map(t => t.user_id)
+      
+      // Get reviews for all teachers of this skill
+      const { data: reviews, error: reviewsError } = await supabase
+        .from('reviews')
+        .select('rating')
+        .in('reviewee_id', teacherIds)
+
+      if (!reviewsError && reviews && reviews.length > 0) {
+        const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0)
+        averageRating = Math.round((totalRating / reviews.length) * 10) / 10
+      } else {
+        // Fallback to proficiency-based rating if no reviews
+        const { data: teacherSkills, error: teacherSkillsError } = await supabase
+          .from('user_skills')
+          .select('proficiency_level')
+          .eq('skill_id', skillId)
+          .eq('skill_type', 'teach')
+
+        if (!teacherSkillsError && teacherSkills && teacherSkills.length > 0) {
+          const totalProficiency = teacherSkills.reduce((sum, teacher) => sum + teacher.proficiency_level, 0)
+          // Convert proficiency (1-4) to rating (1-5)
+          averageRating = Math.round((totalProficiency / teacherSkills.length * 1.25) * 10) / 10
+        }
+      }
     }
 
     return { teacherCount, learnerCount, averageRating }
@@ -467,5 +488,104 @@ export const db = {
     return data || []
   },
 
+  // Reviews
+  async getUserReviews(userId: string): Promise<Review[]> {
+    const { data, error } = await supabase
+      .from('reviews')
+      .select(`
+        *,
+        reviewer:users!reviews_reviewer_id_fkey(*),
+        session:sessions(*)
+      `)
+      .eq('reviewee_id', userId)
+      .order('created_at', { ascending: false })
+    
+    if (error) {
+      console.error('Error fetching user reviews:', error)
+      return []
+    }
+    return data || []
+  },
+
+  async getUserReviewStats(userId: string): Promise<{
+    averageRating: number
+    totalReviews: number
+    ratingDistribution: Record<number, number>
+  }> {
+    const reviews = await this.getUserReviews(userId)
+    
+    if (reviews.length === 0) {
+      return {
+        averageRating: 0,
+        totalReviews: 0,
+        ratingDistribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
+      }
+    }
+
+    const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0)
+    const averageRating = totalRating / reviews.length
+    
+    const distribution: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
+    reviews.forEach(review => {
+      distribution[review.rating]++
+    })
+
+    return {
+      averageRating,
+      totalReviews: reviews.length,
+      ratingDistribution: distribution
+    }
+  },
+
+  async createReview(review: Omit<Review, 'id' | 'created_at'>): Promise<Review | null> {
+    const { data, error } = await supabase
+      .from('reviews')
+      .insert(review)
+      .select(`
+        *,
+        reviewer:users!reviews_reviewer_id_fkey(*),
+        session:sessions(*)
+      `)
+      .single()
+    
+    if (error) {
+      console.error('Error creating review:', error)
+      return null
+    }
+    return data
+  },
+
+  async getSessionReviews(sessionId: string): Promise<Review[]> {
+    const { data, error } = await supabase
+      .from('reviews')
+      .select(`
+        *,
+        reviewer:users!reviews_reviewer_id_fkey(*),
+        reviewee:users!reviews_reviewee_id_fkey(*)
+      `)
+      .eq('session_id', sessionId)
+    
+    if (error) {
+      console.error('Error fetching session reviews:', error)
+      return []
+    }
+    return data || []
+  },
+
+  async hasUserReviewedSession(userId: string, sessionId: string): Promise<boolean> {
+    const { data, error } = await supabase
+      .from('reviews')
+      .select('id')
+      .eq('session_id', sessionId)
+      .eq('reviewer_id', userId)
+      .single()
+    
+    if (error && error.code !== 'PGRST116') { // PGRST116 is "not found"
+      console.error('Error checking if user reviewed session:', error)
+      return false
+    }
+    
+    return !!data
+  },
 
 } 
