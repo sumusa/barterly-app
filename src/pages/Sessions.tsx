@@ -463,7 +463,7 @@ export default function Sessions() {
                                     className="bg-green-600 hover:bg-green-700"
                                   >
                                     <Play className="h-3 w-3 mr-1" />
-                                    Start
+                                    Mark Started
                                   </Button>
                                   
                                   {session.meeting_url && (
@@ -473,7 +473,7 @@ export default function Sessions() {
                                       onClick={() => window.open(session.meeting_url, '_blank')}
                                     >
                                       <Video className="h-3 w-3 mr-1" />
-                                      Join
+                                      Open Meeting
                                     </Button>
                                   )}
                                 </>
