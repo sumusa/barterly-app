@@ -125,10 +125,10 @@ export default function SuccessStories() {
                 <Button 
                   size="lg" 
                   asChild
-                  className="text-lg px-8 py-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-200"
+                  className="text-lg px-8 py-6 bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-200"
                 >
-                  <Link to="/">
-                    Join the Community
+                  <Link to="/" className="flex items-center justify-center">
+                    <span>Join the Community</span>
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Link>
                 </Button>
@@ -136,101 +136,15 @@ export default function SuccessStories() {
                   variant="outline" 
                   size="lg" 
                   asChild
-                  className="text-lg px-8 py-6 border-2 hover:bg-slate-50 transition-all duration-200"
+                  className="text-lg px-8 py-6 border-2 border-blue-600 text-blue-600 hover:bg-blue-50"
                 >
-                  <Link to="/how-it-works">
-                    How It Works
+                  <Link to="/how-it-works" className="flex items-center justify-center">
+                    <span>How It Works</span>
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Link>
                 </Button>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Stats Section */}
-      <div className="py-16 bg-white/50">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {stats.map((stat, index) => (
-              <div key={index} className="text-center space-y-3">
-                <div className="flex justify-center">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl flex items-center justify-center shadow-lg">
-                    <stat.icon className="h-6 w-6 text-white" />
-                  </div>
-                </div>
-                <div className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  {stat.number}
-                </div>
-                <div className="text-slate-600 font-medium">{stat.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Testimonials Grid */}
-      <div className="py-20 bg-gradient-to-br from-blue-50 to-purple-50">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold text-slate-900 mb-4">
-              Real Stories from Our Community
-            </h2>
-            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-              Hear from learners and teachers who have transformed their skills and built lasting connections through barterly.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {testimonials.map((testimonial) => (
-              <Card key={testimonial.id} className="group border-0 shadow-sm hover:shadow-lg transition-all duration-300 bg-white/80 backdrop-blur-sm">
-                <CardHeader className="pb-4">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center space-x-3">
-                      <Avatar className="w-12 h-12">
-                        <AvatarImage src={testimonial.image} alt={testimonial.name} />
-                        <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-500 text-white font-semibold">
-                          {testimonial.avatar}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <h3 className="font-semibold text-slate-900">{testimonial.name}</h3>
-                        <p className="text-sm text-slate-600">{testimonial.role}</p>
-                        <p className="text-xs text-slate-500">{testimonial.location}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      {[...Array(testimonial.rating)].map((_, i) => (
-                        <Star key={i} className="w-4 h-4 text-yellow-400 fill-current" />
-                      ))}
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2 text-sm text-slate-500 mb-3">
-                    <Calendar className="w-4 h-4" />
-                    <span>{testimonial.sessions} sessions completed</span>
-                  </div>
-                  
-                  <div className="flex flex-wrap gap-2">
-                    {testimonial.skills.map((skill, index) => (
-                      <Badge key={index} variant="secondary" className="text-xs">
-                        {skill}
-                      </Badge>
-                    ))}
-                  </div>
-                </CardHeader>
-                
-                <CardContent>
-                  <div className="relative">
-                    <Quote className="w-6 h-6 text-slate-300 absolute -top-2 -left-1" />
-                    <p className="text-slate-700 leading-relaxed pl-4">
-                      "{testimonial.story}"
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
           </div>
         </div>
       </div>
@@ -333,6 +247,92 @@ export default function SuccessStories() {
         </div>
       </div>
 
+      {/* Stats Section */}
+      <div className="py-16 bg-white/50">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            {stats.map((stat, index) => (
+              <div key={index} className="text-center space-y-3">
+                <div className="flex justify-center">
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl flex items-center justify-center shadow-lg">
+                    <stat.icon className="h-6 w-6 text-white" />
+                  </div>
+                </div>
+                <div className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  {stat.number}
+                </div>
+                <div className="text-slate-600 font-medium">{stat.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Testimonials Grid */}
+      <div className="py-20 bg-gradient-to-br from-blue-50 to-purple-50">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl lg:text-4xl font-bold text-slate-900 mb-4">
+              Real Stories from Our Community
+            </h2>
+            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+              Hear from learners and teachers who have transformed their skills and built lasting connections through barterly.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {testimonials.map((testimonial) => (
+              <Card key={testimonial.id} className="group border-0 shadow-sm hover:shadow-lg transition-all duration-300 bg-white/80 backdrop-blur-sm">
+                <CardHeader className="pb-4">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center space-x-3">
+                      <Avatar className="w-12 h-12">
+                        <AvatarImage src={testimonial.image} alt={testimonial.name} />
+                        <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-500 text-white font-semibold">
+                          {testimonial.avatar}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <h3 className="font-semibold text-slate-900">{testimonial.name}</h3>
+                        <p className="text-sm text-slate-600">{testimonial.role}</p>
+                        <p className="text-xs text-slate-500">{testimonial.location}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      {[...Array(testimonial.rating)].map((_, i) => (
+                        <Star key={i} className="w-4 h-4 text-yellow-400 fill-current" />
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2 text-sm text-slate-500 mb-3">
+                    <Calendar className="w-4 h-4" />
+                    <span>{testimonial.sessions} sessions completed</span>
+                  </div>
+                  
+                  <div className="flex flex-wrap gap-2">
+                    {testimonial.skills.map((skill, index) => (
+                      <Badge key={index} variant="secondary" className="text-xs">
+                        {skill}
+                      </Badge>
+                    ))}
+                  </div>
+                </CardHeader>
+                
+                <CardContent>
+                  <div className="relative">
+                    <Quote className="w-6 h-6 text-slate-300 absolute -top-2 -left-1" />
+                    <p className="text-slate-700 leading-relaxed pl-4">
+                      "{testimonial.story}"
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </div>
+
       {/* CTA Section */}
       <div className="py-20 bg-gradient-to-r from-slate-900 to-blue-900 text-white">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl text-center">
@@ -345,10 +345,10 @@ export default function SuccessStories() {
           <Button 
             size="lg" 
             asChild
-            className="text-lg px-8 py-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-200"
+            className="text-lg px-8 py-6 bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-200"
           >
-            <Link to="/">
-              Start Your Journey
+            <Link to="/" className="flex items-center justify-center">
+              <span>Start Your Journey</span>
               <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
           </Button>

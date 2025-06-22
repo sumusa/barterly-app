@@ -47,10 +47,10 @@ export default function HowItWorks() {
                 <Button 
                   size="lg" 
                   asChild
-                  className="text-lg px-8 py-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-200"
+                  className="text-lg px-8 py-6 bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-200"
                 >
-                  <Link to="/">
-                    Get Started
+                  <Link to="/" className="flex items-center justify-center">
+                    <span>Get Started</span>
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Link>
                 </Button>
@@ -58,10 +58,10 @@ export default function HowItWorks() {
                   variant="outline" 
                   size="lg" 
                   asChild
-                  className="text-lg px-8 py-6 border-2 hover:bg-slate-50 transition-all duration-200"
+                  className="text-lg px-8 py-6 border-2 border-blue-600 text-blue-600 hover:bg-blue-50"
                 >
-                  <Link to="/features">
-                    View Features
+                  <Link to="/features" className="flex items-center justify-center">
+                    <span>View Features</span>
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Link>
                 </Button>
@@ -371,10 +371,10 @@ export default function HowItWorks() {
           <Button 
             size="lg" 
             asChild
-            className="text-lg px-8 py-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-200"
+            className="text-lg px-8 py-6 bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-200"
           >
-            <Link to="/">
-              Get Started Now
+            <Link to="/" className="flex items-center justify-center">
+              <span>Get Started Now</span>
               <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
           </Button>

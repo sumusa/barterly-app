@@ -178,10 +178,10 @@ export default function HelpCenter() {
                 <Button 
                   size="lg" 
                   asChild
-                  className="text-lg px-8 py-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-200"
+                  className="text-lg px-8 py-6 bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-200"
                 >
-                  <Link to="/">
-                    Back to Home
+                  <Link to="/" className="flex items-center justify-center">
+                    <span>Back to Home</span>
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Link>
                 </Button>
@@ -362,8 +362,10 @@ export default function HelpCenter() {
                   variant="secondary"
                   className="text-lg px-8 py-6 bg-white text-blue-600 hover:bg-slate-100 shadow-lg hover:shadow-xl transition-all duration-200"
                 >
-                  <Mail className="mr-2 h-5 w-5" />
-                  Contact Support Team
+                  <span className="flex items-center justify-center">
+                    <Mail className="mr-2 h-5 w-5" />
+                    Contact Support Team
+                  </span>
                 </Button>
               </div>
             </CardContent>
@@ -385,10 +387,10 @@ export default function HelpCenter() {
               variant="outline" 
               size="lg" 
               asChild
-              className="border-white text-white hover:bg-white hover:text-slate-900 transition-all duration-200"
+              className="border-blue-600 text-blue-600 hover:bg-blue-50"
             >
-              <Link to="/how-it-works">
-                How It Works
+              <Link to="/how-it-works" className="flex items-center justify-center">
+                <span>How It Works</span>
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
@@ -396,10 +398,10 @@ export default function HelpCenter() {
               variant="outline" 
               size="lg" 
               asChild
-              className="border-white text-white hover:bg-white hover:text-slate-900 transition-all duration-200"
+              className="border-blue-600 text-blue-600 hover:bg-blue-50"
             >
-              <Link to="/features">
-                Features
+              <Link to="/features" className="flex items-center justify-center">
+                <span>Features</span>
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
@@ -407,10 +409,10 @@ export default function HelpCenter() {
               variant="outline" 
               size="lg" 
               asChild
-              className="border-white text-white hover:bg-white hover:text-slate-900 transition-all duration-200"
+              className="border-blue-600 text-blue-600 hover:bg-blue-50"
             >
-              <Link to="/terms-of-use">
-                Terms of Use
+              <Link to="/terms-of-use" className="flex items-center justify-center">
+                <span>Terms of Use</span>
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>

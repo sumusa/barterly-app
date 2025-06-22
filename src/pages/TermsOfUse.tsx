@@ -37,10 +37,10 @@ export default function TermsOfUse() {
                 <Button 
                   size="lg" 
                   asChild
-                  className="text-lg px-8 py-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-200"
+                  className="text-lg px-8 py-6 bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-200"
                 >
-                  <Link to="/">
-                    Back to Home
+                  <Link to="/" className="flex items-center justify-center">
+                    <span>Back to Home</span>
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Link>
                 </Button>
@@ -265,10 +265,10 @@ export default function TermsOfUse() {
             <Button 
               size="lg" 
               asChild
-              className="text-lg px-8 py-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-200"
+              className="text-lg px-8 py-6 bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-200"
             >
-              <Link to="/help">
-                Contact Support
+              <Link to="/help" className="flex items-center justify-center">
+                <span>Contact Support</span>
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
@@ -276,10 +276,10 @@ export default function TermsOfUse() {
               variant="outline" 
               size="lg" 
               asChild
-              className="text-lg px-8 py-6 border-2 border-white text-white hover:bg-white hover:text-slate-900 transition-all duration-200"
+              className="text-lg px-8 py-6 border-2 border-blue-600 text-blue-600 hover:bg-blue-50"
             >
-              <Link to="/">
-                Back to Home
+              <Link to="/" className="flex items-center justify-center">
+                <span>Back to Home</span>
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
