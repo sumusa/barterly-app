@@ -546,28 +546,28 @@ export default function Profile() {
                       </div>
                       <h4 className="text-lg font-semibold text-slate-900">Teaching ({skillStats.teaching.length})</h4>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2.5">
                       {skillStats.teaching.map((skill) => (
-                        <div key={skill.id} className="group p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors">
-                          <div className="flex items-center justify-between">
-                            <div className="flex-1">
-                              <h5 className="font-medium text-slate-900">{skill.skill?.name}</h5>
-                              <div className="flex items-center space-x-2 mt-1">
+                        <div key={skill.id} className="group p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors border border-slate-200/50 hover:border-slate-300/50">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1 min-w-0">
+                              <h5 className="font-medium text-slate-900 truncate">{skill.skill?.name}</h5>
+                              <div className="flex items-center space-x-2 mt-2">
                                 <div className={`px-2 py-1 rounded-full text-xs text-white font-medium ${getProficiencyColor(skill.proficiency_level)}`}>
                                   {getProficiencyLabel(skill.proficiency_level)}
                                 </div>
-                                <Badge variant="secondary" className="text-xs">{skill.skill?.category}</Badge>
+                                <Badge variant="secondary" className="text-xs truncate">{skill.skill?.category}</Badge>
                               </div>
                               {skill.description && (
                                 <p className="text-sm text-slate-600 mt-2 line-clamp-2">{skill.description}</p>
                               )}
                             </div>
-                            <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity ml-2 flex-shrink-0">
                               <Button
                                 size="sm"
                                 variant="ghost"
                                 onClick={() => openEditSkill(skill)}
-                                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 h-8 w-8 p-0"
                               >
                                 <Edit3 className="w-4 h-4" />
                               </Button>
@@ -575,7 +575,7 @@ export default function Profile() {
                                 size="sm"
                                 variant="ghost"
                                 onClick={() => removeSkill(skill.id)}
-                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                className="text-red-600 hover:text-red-700 hover:bg-red-50 h-8 w-8 p-0"
                               >
                                 <Trash2 className="w-4 h-4" />
                               </Button>
@@ -596,28 +596,28 @@ export default function Profile() {
                       </div>
                       <h4 className="text-lg font-semibold text-slate-900">Learning ({skillStats.learning.length})</h4>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2.5">
                       {skillStats.learning.map((skill) => (
-                        <div key={skill.id} className="group p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors">
-                          <div className="flex items-center justify-between">
-                            <div className="flex-1">
-                              <h5 className="font-medium text-slate-900">{skill.skill?.name}</h5>
-                              <div className="flex items-center space-x-2 mt-1">
+                        <div key={skill.id} className="group p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors border border-slate-200/50 hover:border-slate-300/50">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1 min-w-0">
+                              <h5 className="font-medium text-slate-900 truncate">{skill.skill?.name}</h5>
+                              <div className="flex items-center space-x-2 mt-2">
                                 <div className={`px-2 py-1 rounded-full text-xs text-white font-medium ${getProficiencyColor(skill.proficiency_level)}`}>
                                   {getProficiencyLabel(skill.proficiency_level)}
                                 </div>
-                                <Badge variant="secondary" className="text-xs">{skill.skill?.category}</Badge>
+                                <Badge variant="secondary" className="text-xs truncate">{skill.skill?.category}</Badge>
                               </div>
                               {skill.description && (
                                 <p className="text-sm text-slate-600 mt-2 line-clamp-2">{skill.description}</p>
                               )}
                             </div>
-                            <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity ml-2 flex-shrink-0">
                               <Button
                                 size="sm"
                                 variant="ghost"
                                 onClick={() => openEditSkill(skill)}
-                                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 h-8 w-8 p-0"
                               >
                                 <Edit3 className="w-4 h-4" />
                               </Button>
@@ -625,7 +625,7 @@ export default function Profile() {
                                 size="sm"
                                 variant="ghost"
                                 onClick={() => removeSkill(skill.id)}
-                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                className="text-red-600 hover:text-red-700 hover:bg-red-50 h-8 w-8 p-0"
                               >
                                 <Trash2 className="w-4 h-4" />
                               </Button>
