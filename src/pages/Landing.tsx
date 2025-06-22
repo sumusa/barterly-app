@@ -16,7 +16,12 @@ import {
   Shield,
   CheckCircle,
   Sparkles,
-  TestTube
+  TestTube,
+  Github,
+  Linkedin,
+  Mail,
+  Heart,
+  Code
 } from 'lucide-react'
 
 export default function LandingPage() {
@@ -283,19 +288,19 @@ export default function LandingPage() {
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             <div className="space-y-2">
-              <div className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">1,200+</div>
+              <div className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">150+</div>
               <div className="text-slate-300">Active Learners</div>
             </div>
             <div className="space-y-2">
-              <div className="text-4xl font-bold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">500+</div>
+              <div className="text-4xl font-bold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">80+</div>
               <div className="text-slate-300">Skills Available</div>
             </div>
             <div className="space-y-2">
-              <div className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">3,000+</div>
+              <div className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">200+</div>
               <div className="text-slate-300">Sessions Completed</div>
             </div>
             <div className="space-y-2">
-              <div className="text-4xl font-bold bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">98%</div>
+              <div className="text-4xl font-bold bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">96%</div>
               <div className="text-slate-300">Satisfaction Rate</div>
             </div>
           </div>
@@ -321,6 +326,131 @@ export default function LandingPage() {
           </Button>
         </div>
       </div>
+
+      {/* Footer */}
+      <footer className="bg-slate-900 text-white">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 max-w-7xl">
+          <div className="grid md:grid-cols-4 gap-8 mb-12">
+            {/* Brand Section */}
+            <div className="md:col-span-2 space-y-6">
+              <div className="flex items-center space-x-3">
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                  <Users className="h-6 w-6 text-white" />
+                </div>
+                <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                  barterly
+                </h3>
+              </div>
+              <p className="text-slate-300 text-lg leading-relaxed max-w-md">
+                Where skills meet purpose. Join our community of learners and teachers sharing knowledge, building connections, and growing together.
+              </p>
+              <div className="flex space-x-4">
+                <a 
+                  href="https://github.com/sumusa" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 bg-slate-800 hover:bg-slate-700 rounded-lg flex items-center justify-center transition-colors duration-200"
+                >
+                  <Github className="w-5 h-5" />
+                </a>
+                <a 
+                  href="https://linkedin.com/in/sumayyahmusa" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 bg-slate-800 hover:bg-slate-700 rounded-lg flex items-center justify-center transition-colors duration-200"
+                >
+                  <Linkedin className="w-5 h-5" />
+                </a>
+                <a 
+                  href="mailto:your.email@example.com" 
+                  className="w-10 h-10 bg-slate-800 hover:bg-slate-700 rounded-lg flex items-center justify-center transition-colors duration-200"
+                >
+                  <Mail className="w-5 h-5" />
+                </a>
+              </div>
+            </div>
+
+            {/* Quick Links */}
+            <div className="space-y-6">
+              <h4 className="text-lg font-semibold text-white">Platform</h4>
+              <ul className="space-y-3">
+                <li>
+                  <a href="#features" className="text-slate-300 hover:text-white transition-colors duration-200">
+                    Features
+                  </a>
+                </li>
+                <li>
+                  <a href="#auth-section" className="text-slate-300 hover:text-white transition-colors duration-200">
+                    Get Started
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="text-slate-300 hover:text-white transition-colors duration-200">
+                    How It Works
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="text-slate-300 hover:text-white transition-colors duration-200">
+                    Success Stories
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            {/* Support */}
+            <div className="space-y-6">
+              <h4 className="text-lg font-semibold text-white">Support</h4>
+              <ul className="space-y-3">
+                <li>
+                  <a href="#" className="text-slate-300 hover:text-white transition-colors duration-200">
+                    Help Center
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="text-slate-300 hover:text-white transition-colors duration-200">
+                    Contact Us
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="text-slate-300 hover:text-white transition-colors duration-200">
+                    Privacy Policy
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="text-slate-300 hover:text-white transition-colors duration-200">
+                    Terms of Service
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Bottom Section */}
+          <div className="border-t border-slate-800 pt-8">
+            <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+              <div className="flex items-center space-x-2 text-slate-400">
+                <span>© 2024 barterly. All rights reserved.</span>
+              </div>
+              
+              <div className="flex items-center space-x-2 text-slate-400">
+                <Code className="w-4 h-4" />
+                <span>Built with</span>
+                <Heart className="w-4 h-4 text-red-500 fill-current" />
+                <span>by</span>
+                <a 
+                  href="https://github.com/yourusername" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="font-semibold text-blue-400 hover:text-blue-300 transition-colors duration-200"
+                >
+                  Sumayyah
+                </a>
+                <span>• 2024</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </footer>
 
       {/* Demo Login Modal */}
       {showDemoLogin && (
