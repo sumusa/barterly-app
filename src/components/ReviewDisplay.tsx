@@ -90,22 +90,6 @@ export default function ReviewDisplay({
     }
   }
 
-  const getRatingColor = (rating: number) => {
-    if (rating >= 4.5) return 'text-green-600'
-    if (rating >= 4.0) return 'text-blue-600'
-    if (rating >= 3.5) return 'text-yellow-600'
-    if (rating >= 3.0) return 'text-orange-600'
-    return 'text-red-600'
-  }
-
-  const getRatingLabel = (rating: number) => {
-    if (rating >= 4.5) return 'Excellent'
-    if (rating >= 4.0) return 'Very Good'
-    if (rating >= 3.5) return 'Good'
-    if (rating >= 3.0) return 'Fair'
-    return 'Poor'
-  }
-
   const displayedReviews = expanded ? reviews : reviews.slice(0, maxReviews)
 
   if (loading) {
