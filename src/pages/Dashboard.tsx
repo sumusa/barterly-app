@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { supabase, db, type User, type UserSkill, type SkillMatch, type Session } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -69,6 +70,7 @@ export default function Dashboard() {
   const [recentMatches, setRecentMatches] = useState<SkillMatch[]>([])
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([])
   const [loading, setLoading] = useState(true)
+  const navigate = useNavigate()
 
   useEffect(() => {
     loadDashboardData()
@@ -256,7 +258,7 @@ export default function Dashboard() {
             {/* Quick Actions */}
             <div className="flex items-center space-x-3">
               <Button 
-                onClick={() => window.location.href = '/skills'}
+                onClick={() => navigate('/skills')}
                 className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 group"
               >
                 <Plus className="w-4 h-4 mr-2 group-hover:rotate-90 transition-transform duration-200" />
@@ -264,7 +266,7 @@ export default function Dashboard() {
               </Button>
               <Button 
                 variant="outline" 
-                onClick={() => window.location.href = '/sessions'}
+                onClick={() => navigate('/sessions')}
                 className="border-slate-200 hover:bg-slate-50 hover:border-slate-300 transition-all duration-200"
               >
                 <Calendar className="w-4 h-4 mr-2" />
@@ -374,7 +376,7 @@ export default function Dashboard() {
                   <Button 
                     variant="ghost" 
                     size="sm"
-                    onClick={() => window.location.href = '/sessions'}
+                    onClick={() => navigate('/sessions')}
                     className="text-slate-600 hover:text-slate-900"
                   >
                     View all
@@ -418,7 +420,7 @@ export default function Dashboard() {
                     </div>
                     <h3 className="text-lg font-medium text-slate-900 mb-2">No upcoming sessions</h3>
                     <p className="text-slate-600 mb-4">Schedule your first learning session to get started</p>
-                    <Button onClick={() => window.location.href = '/sessions'}>
+                    <Button onClick={() => navigate('/sessions')}>
                       <Plus className="w-4 h-4 mr-2" />
                       Schedule Session
                     </Button>
@@ -443,7 +445,7 @@ export default function Dashboard() {
                   <Button 
                     variant="ghost" 
                     size="sm"
-                    onClick={() => window.location.href = '/matches'}
+                    onClick={() => navigate('/matches')}
                     className="text-slate-600 hover:text-slate-900"
                   >
                     View all
@@ -486,7 +488,7 @@ export default function Dashboard() {
                               <Button 
                                 size="sm" 
                                 variant="outline" 
-                                onClick={() => window.location.href = '/messages'}
+                                onClick={() => navigate('/messages')}
                                 className="opacity-0 group-hover:opacity-100 transition-opacity"
                               >
                                 <MessageCircle className="w-4 h-4 mr-1" />
@@ -497,7 +499,7 @@ export default function Dashboard() {
                               <Button 
                                 size="sm" 
                                 variant="outline" 
-                                onClick={() => window.location.href = '/matches'}
+                                onClick={() => navigate('/matches')}
                                 className="opacity-0 group-hover:opacity-100 transition-opacity text-amber-600 border-amber-200 hover:bg-amber-50"
                               >
                                 <CheckCircle className="w-4 h-4 mr-1" />
@@ -521,7 +523,7 @@ export default function Dashboard() {
                     </div>
                     <h3 className="text-lg font-medium text-slate-900 mb-2">No matches yet</h3>
                     <p className="text-slate-600 mb-4">Start connecting with teachers and learners</p>
-                    <Button onClick={() => window.location.href = '/skills'}>
+                    <Button onClick={() => navigate('/skills')}>
                       <Eye className="w-4 h-4 mr-2" />
                       Explore Skills
                     </Button>
@@ -567,7 +569,7 @@ export default function Dashboard() {
                     <Button 
                       size="sm" 
                       variant="outline"
-                      onClick={() => window.location.href = '/profile'}
+                      onClick={() => navigate('/profile')}
                       className="w-full mt-3 border-blue-200 text-blue-700 hover:bg-blue-50"
                     >
                       Complete Profile
@@ -649,7 +651,7 @@ export default function Dashboard() {
                   <Button 
                     size="sm" 
                     variant="outline"
-                    onClick={() => window.location.href = stats.totalSkills === 0 ? '/profile' : '/skills'}
+                    onClick={() => navigate(stats.totalSkills === 0 ? '/profile' : '/skills')}
                     className="w-full border-amber-200 text-amber-700 hover:bg-amber-50"
                   >
                     {stats.totalSkills === 0 ? 'Add Skills' : stats.activeMatches === 0 ? 'Find Teachers' : 'Schedule Session'}

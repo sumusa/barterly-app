@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { supabase, db, type Session, type SkillMatch } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -63,6 +64,8 @@ export default function Sessions() {
     location: '',
     meeting_url: ''
   })
+
+  const navigate = useNavigate()
 
   useEffect(() => {
     loadUserAndSessions()
@@ -493,7 +496,7 @@ export default function Sessions() {
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => window.location.href = '/messages'}
+                                onClick={() => navigate('/messages')}
                               >
                                 <MessageCircle className="h-3 w-3 mr-1" />
                                 Chat
