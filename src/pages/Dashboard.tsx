@@ -94,7 +94,7 @@ export default function Dashboard() {
           filter: `user_id=eq.${user.id}`,
         },
         () => {
-          debouncedUpdate('skills', () => loadSkillsData())
+          debouncedUpdate('skills', () => loadSkillsData(user))
         }
       )
       .subscribe()
@@ -111,7 +111,7 @@ export default function Dashboard() {
           filter: `or(teacher_id.eq.${user.id},learner_id.eq.${user.id})`,
         },
         () => {
-          debouncedUpdate('matches', () => loadMatchesData())
+          debouncedUpdate('matches', () => loadMatchesData(user))
         }
       )
       .subscribe()
@@ -130,7 +130,7 @@ export default function Dashboard() {
           const session = payload.new as Session
           // Check if this session involves the current user by checking the skill_match
           if (session.skill_match) {
-            debouncedUpdate('sessions', () => loadSessionsData())
+            debouncedUpdate('sessions', () => loadSessionsData(user))
           }
         }
       )
@@ -147,7 +147,7 @@ export default function Dashboard() {
           table: 'messages',
         },
         () => {
-          debouncedUpdate('messages', () => loadUnreadMessagesCount(), 300)
+          debouncedUpdate('messages', () => loadUnreadMessagesCount(user), 300)
         }
       )
       .subscribe()
@@ -186,12 +186,12 @@ export default function Dashboard() {
       console.log('Emma userSkills:', userSkills)
       console.log('Emma skillMatches:', skillMatches)
 
-      // Load all data in parallel
+      // Load all data in parallel - pass user directly to avoid state timing issues
       await Promise.all([
-        loadSkillsData(),
-        loadMatchesData(),
-        loadSessionsData(),
-        loadUnreadMessagesCount()
+        loadSkillsData(user),
+        loadMatchesData(user),
+        loadSessionsData(user),
+        loadUnreadMessagesCount(user)
       ])
 
       // Log final stats after all data is loaded
@@ -204,11 +204,12 @@ export default function Dashboard() {
     }
   }
 
-  const loadSkillsData = async () => {
-    if (!user) return
+  const loadSkillsData = async (currentUser?: any) => {
+    const userToUse = currentUser || user
+    if (!userToUse) return
     
     try {
-      const userSkills = await db.getUserSkills(user.id)
+      const userSkills = await db.getUserSkills(userToUse.id)
       const teachingSkills = userSkills.filter(s => s.skill_type === 'teach')
       const learningSkills = userSkills.filter(s => s.skill_type === 'learn')
 
@@ -227,11 +228,12 @@ export default function Dashboard() {
     }
   }
 
-  const loadMatchesData = async () => {
-    if (!user) return
+  const loadMatchesData = async (currentUser?: any) => {
+    const userToUse = currentUser || user
+    if (!userToUse) return
     
     try {
-      const skillMatches = await db.getSkillMatches(user.id)
+      const skillMatches = await db.getSkillMatches(userToUse.id)
       const activeMatches = skillMatches.filter(m => m.status === 'accepted')
       const pendingMatches = skillMatches.filter(m => m.status === 'pending')
       const completedMatches = skillMatches.filter(m => m.status === 'completed')
@@ -252,17 +254,18 @@ export default function Dashboard() {
       setRecentMatches(skillMatches.slice(0, 5))
 
       // Update recent activity with new matches
-      updateRecentActivity(skillMatches)
+      updateRecentActivity(skillMatches, undefined, userToUse)
     } catch (error) {
       console.error('Error loading matches data:', error)
     }
   }
 
-  const loadSessionsData = async () => {
-    if (!user) return
+  const loadSessionsData = async (currentUser?: any) => {
+    const userToUse = currentUser || user
+    if (!userToUse) return
     
     try {
-      const userSessions = await db.getUserSessions(user.id)
+      const userSessions = await db.getUserSessions(userToUse.id)
       const now = new Date()
       const upcoming = userSessions.filter(s => 
         s.status === 'scheduled' && new Date(s.scheduled_at) > now
@@ -279,24 +282,25 @@ export default function Dashboard() {
       setUpcomingSessions(upcoming.slice(0, 3))
 
       // Update recent activity with new sessions
-      updateRecentActivity(undefined, userSessions)
+      updateRecentActivity(undefined, userSessions, userToUse)
     } catch (error) {
       console.error('Error loading sessions data:', error)
     }
   }
 
-  const loadUnreadMessagesCount = async () => {
-    if (!user) return
+  const loadUnreadMessagesCount = async (currentUser?: any) => {
+    const userToUse = currentUser || user
+    if (!userToUse) return
     
     try {
-      const skillMatches = await db.getSkillMatches(user.id)
+      const skillMatches = await db.getSkillMatches(userToUse.id)
       const activeMatches = skillMatches.filter(m => m.status === 'accepted')
       
       let unreadCount = 0
       for (const match of activeMatches) {
         const messages = await db.getMessages(match.id)
         unreadCount += messages.filter(
-          msg => msg.sender_id !== user.id && !msg.read_at
+          msg => msg.sender_id !== userToUse.id && !msg.read_at
         ).length
       }
 
@@ -309,19 +313,20 @@ export default function Dashboard() {
     }
   }
 
-  const updateRecentActivity = async (skillMatches?: SkillMatch[], userSessions?: Session[]) => {
-    if (!user) return
+  const updateRecentActivity = async (skillMatches?: SkillMatch[], userSessions?: Session[], currentUser?: any) => {
+    const userToUse = currentUser || user
+    if (!userToUse) return
 
     try {
       // Load fresh data if not provided
-      const matches = skillMatches || await db.getSkillMatches(user.id)
-      const sessions = userSessions || await db.getUserSessions(user.id)
+      const matches = skillMatches || await db.getSkillMatches(userToUse.id)
+      const sessions = userSessions || await db.getUserSessions(userToUse.id)
 
       const activities: RecentActivity[] = []
       
       // Add recent matches
       matches.slice(0, 3).forEach(match => {
-        const partner = match.teacher_id === user.id ? match.learner : match.teacher
+        const partner = match.teacher_id === userToUse.id ? match.learner : match.teacher
         activities.push({
           id: `match-${match.id}`,
           type: 'match_request',
@@ -527,8 +532,8 @@ export default function Dashboard() {
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
                   <p className="text-sm font-medium text-slate-600">Sessions</p>
-                  <p className="text-3xl font-bold text-slate-900">{stats.upcomingSessions}</p>
-                  <p className="text-xs text-slate-500">upcoming sessions</p>
+                  <p className="text-3xl font-bold text-slate-900">{stats.completedSessions}</p>
+                  <p className="text-xs text-slate-500">completed sessions</p>
                 </div>
                 <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                   <Calendar className="w-6 h-6 text-white" />
