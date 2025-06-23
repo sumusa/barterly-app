@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import AddSkillForm from '@/components/AddSkillForm'
 import { 
   Search, 
@@ -105,19 +105,19 @@ export default function SkillMatching() {
           // Get review stats for this teacher
           const reviewStats = await db.getUserReviewStats(userId)
           
-          // Get total students (completed matches)
-          const { data: matches } = await supabase
+          // Get student statistics
+          const { data: allMatches } = await supabase
             .from('skill_matches')
-            .select('id')
+            .select('id, status')
             .eq('teacher_id', userId)
-            .eq('status', 'completed')
+            .eq('status', 'accepted')
 
           teacherMap.set(userId, {
             user: teacherSkill.user,
             skills: [],
             averageRating: reviewStats.averageRating,
             totalReviews: reviewStats.totalReviews,
-            totalStudents: matches?.length || 0
+            totalStudents: allMatches?.length || 0,
           })
         }
         
