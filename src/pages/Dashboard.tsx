@@ -177,6 +177,15 @@ export default function Dashboard() {
       const profile = await db.getUser(user.id)
       setUserProfile(profile)
 
+      // Fetch all data
+      const userSkills = await db.getUserSkills(user.id)
+      const skillMatches = await db.getSkillMatches(user.id)
+
+      // ADD THESE LOGS:
+      console.log('Emma user id:', user.id)
+      console.log('Emma userSkills:', userSkills)
+      console.log('Emma skillMatches:', skillMatches)
+
       // Load all data in parallel
       await Promise.all([
         loadSkillsData(),
@@ -184,6 +193,9 @@ export default function Dashboard() {
         loadSessionsData(),
         loadUnreadMessagesCount()
       ])
+
+      // Log final stats after all data is loaded
+      console.log('Final stats after loading:', stats)
 
     } catch (error) {
       console.error('Error loading dashboard data:', error)
@@ -199,6 +211,10 @@ export default function Dashboard() {
       const userSkills = await db.getUserSkills(user.id)
       const teachingSkills = userSkills.filter(s => s.skill_type === 'teach')
       const learningSkills = userSkills.filter(s => s.skill_type === 'learn')
+
+      console.log('loadSkillsData - userSkills:', userSkills)
+      console.log('loadSkillsData - teachingSkills:', teachingSkills)
+      console.log('loadSkillsData - learningSkills:', learningSkills)
 
       setStats(prev => ({
         ...prev,
@@ -219,6 +235,11 @@ export default function Dashboard() {
       const activeMatches = skillMatches.filter(m => m.status === 'accepted')
       const pendingMatches = skillMatches.filter(m => m.status === 'pending')
       const completedMatches = skillMatches.filter(m => m.status === 'completed')
+
+      console.log('loadMatchesData - skillMatches:', skillMatches)
+      console.log('loadMatchesData - activeMatches:', activeMatches)
+      console.log('loadMatchesData - pendingMatches:', pendingMatches)
+      console.log('loadMatchesData - completedMatches:', completedMatches)
 
       setStats(prev => ({
         ...prev,
@@ -368,6 +389,11 @@ export default function Dashboard() {
     if (diffInHours < 48) return 'Yesterday'
     return `${Math.floor(diffInHours / 24)}d ago`
   }
+
+  // Log stats whenever they change
+  useEffect(() => {
+    console.log('Stats updated:', stats)
+  }, [stats])
 
   if (loading) {
     return (
