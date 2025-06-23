@@ -68,6 +68,101 @@ export default function Dashboard() {
     loadDashboardData()
   }, [])
 
+  // Set up real-time subscriptions for live updates
+  useEffect(() => {
+    if (!user) return
+
+    // Debounce function to prevent too many rapid updates
+    let debounceTimers: { [key: string]: NodeJS.Timeout } = {}
+    
+    const debouncedUpdate = (key: string, updateFn: () => void, delay = 500) => {
+      if (debounceTimers[key]) {
+        clearTimeout(debounceTimers[key])
+      }
+      debounceTimers[key] = setTimeout(updateFn, delay)
+    }
+
+    // Subscribe to user_skills changes
+    const userSkillsChannel = supabase
+      .channel('user-skills-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'user_skills',
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => {
+          debouncedUpdate('skills', () => loadSkillsData())
+        }
+      )
+      .subscribe()
+
+    // Subscribe to skill_matches changes
+    const skillMatchesChannel = supabase
+      .channel('skill-matches-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'skill_matches',
+          filter: `or(teacher_id.eq.${user.id},learner_id.eq.${user.id})`,
+        },
+        () => {
+          debouncedUpdate('matches', () => loadMatchesData())
+        }
+      )
+      .subscribe()
+
+    // Subscribe to sessions changes
+    const sessionsChannel = supabase
+      .channel('sessions-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'sessions',
+        },
+        (payload) => {
+          const session = payload.new as Session
+          // Check if this session involves the current user by checking the skill_match
+          if (session.skill_match) {
+            debouncedUpdate('sessions', () => loadSessionsData())
+          }
+        }
+      )
+      .subscribe()
+
+    // Subscribe to messages changes for unread count
+    const messagesChannel = supabase
+      .channel('messages-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'messages',
+        },
+        () => {
+          debouncedUpdate('messages', () => loadUnreadMessagesCount(), 300)
+        }
+      )
+      .subscribe()
+
+    return () => {
+      // Clear all debounce timers
+      Object.values(debounceTimers).forEach(timer => clearTimeout(timer))
+      
+      userSkillsChannel.unsubscribe()
+      skillMatchesChannel.unsubscribe()
+      sessionsChannel.unsubscribe()
+      messagesChannel.unsubscribe()
+    }
+  }, [user])
+
   const loadDashboardData = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser()
@@ -82,26 +177,100 @@ export default function Dashboard() {
       const profile = await db.getUser(user.id)
       setUserProfile(profile)
 
-      // Load all user data in parallel
-      const [userSkills, skillMatches, userSessions] = await Promise.all([
-        db.getUserSkills(user.id),
-        db.getSkillMatches(user.id),
-        db.getUserSessions(user.id)
+      // Load all data in parallel
+      await Promise.all([
+        loadSkillsData(),
+        loadMatchesData(),
+        loadSessionsData(),
+        loadUnreadMessagesCount()
       ])
 
-      // Calculate stats
+    } catch (error) {
+      console.error('Error loading dashboard data:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const loadSkillsData = async () => {
+    if (!user) return
+    
+    try {
+      const userSkills = await db.getUserSkills(user.id)
       const teachingSkills = userSkills.filter(s => s.skill_type === 'teach')
       const learningSkills = userSkills.filter(s => s.skill_type === 'learn')
+
+      setStats(prev => ({
+        ...prev,
+        totalSkills: userSkills.length,
+        teachingSkills: teachingSkills.length,
+        learningSkills: learningSkills.length
+      }))
+    } catch (error) {
+      console.error('Error loading skills data:', error)
+    }
+  }
+
+  const loadMatchesData = async () => {
+    if (!user) return
+    
+    try {
+      const skillMatches = await db.getSkillMatches(user.id)
       const activeMatches = skillMatches.filter(m => m.status === 'accepted')
       const pendingMatches = skillMatches.filter(m => m.status === 'pending')
       const completedMatches = skillMatches.filter(m => m.status === 'completed')
+
+      setStats(prev => ({
+        ...prev,
+        activeMatches: activeMatches.length,
+        pendingMatches: pendingMatches.length,
+        completedMatches: completedMatches.length
+      }))
+
+      // Set recent matches (limit to 5)
+      setRecentMatches(skillMatches.slice(0, 5))
+
+      // Update recent activity with new matches
+      updateRecentActivity(skillMatches)
+    } catch (error) {
+      console.error('Error loading matches data:', error)
+    }
+  }
+
+  const loadSessionsData = async () => {
+    if (!user) return
+    
+    try {
+      const userSessions = await db.getUserSessions(user.id)
       const now = new Date()
       const upcoming = userSessions.filter(s => 
         s.status === 'scheduled' && new Date(s.scheduled_at) > now
       )
       const completed = userSessions.filter(s => s.status === 'completed')
 
-      // Load messages for unread count
+      setStats(prev => ({
+        ...prev,
+        upcomingSessions: upcoming.length,
+        completedSessions: completed.length
+      }))
+
+      // Set upcoming sessions (limit to next 3)
+      setUpcomingSessions(upcoming.slice(0, 3))
+
+      // Update recent activity with new sessions
+      updateRecentActivity(undefined, userSessions)
+    } catch (error) {
+      console.error('Error loading sessions data:', error)
+    }
+  }
+
+  const loadUnreadMessagesCount = async () => {
+    if (!user) return
+    
+    try {
+      const skillMatches = await db.getSkillMatches(user.id)
+      const activeMatches = skillMatches.filter(m => m.status === 'accepted')
+      
       let unreadCount = 0
       for (const match of activeMatches) {
         const messages = await db.getMessages(match.id)
@@ -110,29 +279,27 @@ export default function Dashboard() {
         ).length
       }
 
-      setStats({
-        totalSkills: userSkills.length,
-        teachingSkills: teachingSkills.length,
-        learningSkills: learningSkills.length,
-        activeMatches: activeMatches.length,
-        pendingMatches: pendingMatches.length,
-        completedMatches: completedMatches.length,
-        unreadMessages: unreadCount,
-        upcomingSessions: upcoming.length,
-        completedSessions: completed.length
-      })
+      setStats(prev => ({
+        ...prev,
+        unreadMessages: unreadCount
+      }))
+    } catch (error) {
+      console.error('Error loading unread messages count:', error)
+    }
+  }
 
-      // Set upcoming sessions (limit to next 3)
-      setUpcomingSessions(upcoming.slice(0, 3))
-      
-      // Set recent matches (limit to 5)
-      setRecentMatches(skillMatches.slice(0, 5))
+  const updateRecentActivity = async (skillMatches?: SkillMatch[], userSessions?: Session[]) => {
+    if (!user) return
 
-      // Generate recent activity
+    try {
+      // Load fresh data if not provided
+      const matches = skillMatches || await db.getSkillMatches(user.id)
+      const sessions = userSessions || await db.getUserSessions(user.id)
+
       const activities: RecentActivity[] = []
       
       // Add recent matches
-      skillMatches.slice(0, 3).forEach(match => {
+      matches.slice(0, 3).forEach(match => {
         const partner = match.teacher_id === user.id ? match.learner : match.teacher
         activities.push({
           id: `match-${match.id}`,
@@ -145,7 +312,7 @@ export default function Dashboard() {
       })
 
       // Add recent sessions
-      userSessions.slice(0, 2).forEach(session => {
+      sessions.slice(0, 2).forEach(session => {
         activities.push({
           id: `session-${session.id}`,
           type: session.status === 'completed' ? 'session_completed' : 'session_scheduled',
@@ -159,11 +326,8 @@ export default function Dashboard() {
       // Sort activities by timestamp
       activities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
       setRecentActivity(activities.slice(0, 6))
-
     } catch (error) {
-      console.error('Error loading dashboard data:', error)
-    } finally {
-      setLoading(false)
+      console.error('Error updating recent activity:', error)
     }
   }
 
