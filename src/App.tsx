@@ -106,7 +106,7 @@ function App() {
               </>
             )}
           </Routes>
-        </div>
+      </div>
         
         {/* Toast Notifications */}
         <Toaster 
