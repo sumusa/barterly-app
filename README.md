@@ -206,8 +206,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Contact
 
-- **Project Link**: [https://github.com/yourusername/barterly](https://github.com/yourusername/barterly)
-- **Live Demo**: [https://your-netlify-url.netlify.app](https://your-netlify-url.netlify.app)
+- **Project Link**: [https://github.com/sumusa/barterly-app](https://github.com/sumusa/barterly-app)
+- **Live Demo**: [https://barterly.netlify.app/](https://barterly.netlify.app/)
 
 ---
 
